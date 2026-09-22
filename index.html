@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>triễn lãm mỹ thuật (Online)</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+            --danger: #ef4444;
+        }
+
+        [data-theme="dark"] {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #111827;
+            --card-bg: #1f2937;
+            --text: #f9fafb;
+            --border: #374151;
+            --danger: #f87171;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding-bottom: 50px;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .nav-buttons, .user-info {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        button.danger {
+            background-color: var(--danger);
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background-color: var(--card-bg);
+            color: var(--text);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .post-author {
+            font-weight: bold;
+        }
+
+        .post-time {
+            font-size: 12px;
+            color: gray;
+        }
+
+        .comments-section {
+            margin-top: 15px;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+        }
+
+        .comment-item {
+            font-size: 14px;
+            margin-bottom: 5px;
+            background: rgba(0,0,0,0.02);
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        /* Modal Đăng nhập / Đăng ký */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        /* Khung Chat */
+        #chat-box {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+        }
+
+        .chat-msg {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .admin-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <header>
+        <div class="logo">🎨 Mạng Xã Hội Mỹ Thuật</div>
+        <div class="nav-buttons">
+            <button class="secondary" onclick="toggleTheme()">🌙 Đổi Giao Diện</button>
+            <div id="auth-nav">
+                <button onclick="openModal('loginModal')">Đăng Nhập</button>
+                <button class="secondary" onclick="openModal('registerModal')">Đăng Ký</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Phần Đăng bài -->
+        <div class="card" id="create-post-card" style="display: none;">
+            <h3>Tác phẩm / Bài viết mới</h3>
+            <input type="text" id="post-title" placeholder="Tiêu đề bài viết...">
+            <textarea id="post-content" placeholder="Bạn đang nghĩ gì về mỹ thuật hôm nay?"></textarea>
+            <button onclick="createPost()">Đăng Bài</button>
+        </div>
+
+        <!-- Danh sách bài đăng -->
+        <div id="posts-container">
+            <p style="text-align: center; color: gray;">Đang tải bài viết từ máy chủ...</p>
+        </div>
+
+        <!-- Khung Chat toàn cầu -->
+        <div class="card" id="chat-section" style="display: none;">
+            <h3>💬 Phòng Chat Chung</h3>
+            <div id="chat-box"></div>
+            <input type="text" id="chat-input" placeholder="Nhập tin nhắn..." onkeypress="handleChatKey(event)">
+            <button onclick="sendChatMessage()">Gửi Tin Nhắn</button>
+        </div>
+
+        <!-- Khu vực quản lý Admin (Chỉ hiện khi là Admin) -->
+        <div class="card" id="admin-panel" style="display: none; border-color: red;">
+            <h3 style="color: var(--danger);">🛡️ Bảng Điều Khiển Admin (Xóa Tài Khoản)</h3>
+            <p style="font-size: 13px; color: gray; margin-bottom: 10px;">Danh sách tài khoản trên hệ thống:</p>
+            <div id="admin-users-list"></div>
+        </div>
+    </div>
+
+    <!-- Modal Đăng Nhập -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h3>Đăng Nhập</h3>
+            <input type="text" id="login-username" placeholder="Tên đăng nhập">
+            <input type="password" id="login-password" placeholder="Mật khẩu">
+            <button onclick="login()">Đăng Nhập</button>
+            <button class="secondary" onclick="closeModal('loginModal')" style="margin-top: 5px;">Hủy</button>
+        </div>
+    </div>
+
+    <!-- Modal Đăng Ký -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <h3>Đăng Ký Tài Khoản</h3>
+            <input type="text" id="reg-username" placeholder="Tên đăng nhập">
+            <input type="password" id="reg-password" placeholder="Mật khẩu">
+            <button onclick="register()">Đăng Ký</button>
+            <button class="secondary" onclick="closeModal('registerModal')" style="margin-top: 5px;">Hủy</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (Modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getDatabase, ref, set, get, push, onValue, remove, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+        const firebaseConfig = {
+          apiKey: "AIzaSyDJYbA01G9enRNDWFvk3V-5J7cE0SUQn0M",
+          authDomain: "mang-xa-hoi-my-thuat.firebaseapp.com",
+          databaseURL: "https://mang-xa-hoi-my-thuat-default-rtdb.firebaseio.com",
+          projectId: "mang-xa-hoi-my-thuat",
+          storageBucket: "mang-xa-hoi-my-thuat.firebasestorage.app",
+          messagingSenderId: "600111180084",
+          appId: "1:600111180084:web:1d67273a40cb90ef9fdd61",
+          measurementId: "G-C0H0YG8M76"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+
+        window.onload = function() {
+            updateAuthUI();
+            loadPosts();
+            loadChat();
+            if(currentUser && currentUser.username === 'admin') {
+                loadAdminUsers();
+            }
+        };
+
+        window.openModal = function(id) { document.getElementById(id).style.display = 'flex'; }
+        window.closeModal = function(id) { document.getElementById(id).style.display = 'none'; }
+
+        window.toggleTheme = function() {
+            const body = document.body;
+            body.dataset.theme = body.dataset.theme === 'light' ? 'dark' : 'light';
+        }
+
+        // ĐĂNG KÝ
+        window.register = async function() {
+            const u = document.getElementById('reg-username').value.trim();
+            const p = document.getElementById('reg-password').value.trim();
+            if(!u || !p) return alert('Vui lòng điền đủ thông tin!');
+
+            const userRef = ref(db, 'users/' + u);
+            const snapshot = await get(userRef);
+            if(snapshot.exists()) {
+                alert('Tài khoản đã tồn tại!');
+                return;
+            }
+
+            await set(userRef, { username: u, password: p });
+            alert('Đăng ký thành công! Hãy đăng nhập.');
+            closeModal('registerModal');
+        }
+
+        // ĐĂNG NHẬP
+        window.login = async function() {
+            const u = document.getElementById('login-username').value.trim();
+            const p = document.getElementById('login-password').value.trim();
+
+            const userRef = ref(db, 'users/' + u);
+            const snapshot = await get(userRef);
+            if(!snapshot.exists()) {
+                alert('Tài khoản không tồn tại!');
+                return;
+            }
+
+            const userData = snapshot.val();
+            if(userData.password !== p) {
+                alert('Sai mật khẩu!');
+                return;
+            }
+
+            currentUser = { username: u };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            alert('Đăng nhập thành công!');
+            closeModal('loginModal');
+            location.reload();
+        }
+
+        window.logout = function() {
+            localStorage.removeItem('currentUser');
+            location.reload();
+        }
+
+        function updateAuthUI() {
+            const authNav = document.getElementById('auth-nav');
+            const createCard = document.getElementById('create-post-card');
+            const chatSec = document.getElementById('chat-section');
+            const adminPanel = document.getElementById('admin-panel');
+
+            if(currentUser) {
+                let badge = currentUser.username === 'admin' ? '<span class="admin-badge">ADMIN</span>' : '';
+                authNav.innerHTML = `<span>Chào, <b>${currentUser.username}</b> ${badge}</span> <button class="danger" onclick="logout()">Đăng Xuất</button>`;
+                createCard.style.display = 'block';
+                chatSec.style.display = 'block';
+
+                if(currentUser.username === 'admin') {
+                    adminPanel.style.display = 'block';
+                }
+            } else {
+                authNav.innerHTML = `<button onclick="openModal('loginModal')">Đăng Nhập</button><button class="secondary" onclick="openModal('registerModal')">Đăng Ký</button>`;
+                createCard.style.display = 'none';
+                chatSec.style.display = 'none';
+                adminPanel.style.display = 'none';
+            }
+        }
+
+        // ĐĂNG BÀI VIẾT
+        window.createPost = function() {
+            const title = document.getElementById('post-title').value.trim();
+            const content = document.getElementById('post-content').value.trim();
+            if(!title || !content) return alert('Tiêu đề và nội dung không được để trống!');
+
+            const postsRef = ref(db, 'posts');
+            const newPostRef = push(postsRef);
+            set(newPostRef, {
+                title: title,
+                content: content,
+                author: currentUser.username,
+                time: new Date().toLocaleString()
+            });
+
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-content').value = '';
+        }
+
+        // TẢI BÀI VIẾT REALTIME
+        function loadPosts() {
+            const postsRef = ref(db, 'posts');
+            onValue(postsRef, (snapshot) => {
+                const container = document.getElementById('posts-container');
+                container.innerHTML = '';
+                if(!snapshot.exists()) {
+                    container.innerHTML = '<p style="text-align: center; color: gray;">Chưa có bài viết nào.</p>';
+                    return;
+                }
+
+                const data = snapshot.val();
+                Object.keys(data).reverse().forEach(key => {
+                    const post = data[key];
+                    let commentsHTML = '';
+                    if(post.comments) {
+                        Object.values(post.comments).forEach(c => {
+                            commentsHTML += `<div class="comment-item"><b>${c.author}:</b> ${c.content}</div>`;
+                        });
+                    }
+
+                    let deleteBtn = (currentUser && (currentUser.username === 'admin' || currentUser.username === post.author)) 
+                        ? `<button class="danger" style="padding: 2px 8px; font-size: 12px;" onclick="deletePost('${key}')">Xóa Bài</button>` : '';
+
+                    container.innerHTML += `
+                        <div class="card">
+                            <div class="post-header">
+                                <div>
+                                    <span class="post-author">${post.author}</span>
+                                    <span class="post-time">• ${post.time}</span>
+                                </div>
+                                ${deleteBtn}
+                            </div>
+                            <h3>${post.title}</h3>
+                            <p style="margin: 10px 0;">${post.content}</p>
+                            <div class="comments-section">
+                                <div style="margin-bottom: 5px;"><b>Bình luận:</b></div>
+                                ${commentsHTML}
+                                ${currentUser ? `
+                                    <input type="text" id="comment-input-${key}" placeholder="Viết bình luận..." style="margin-top: 5px; margin-bottom: 5px;">
+                                    <button style="padding: 4px 10px; font-size: 12px;" onclick="addComment('${key}')">Gửi Bình Luận</button>
+                                ` : '<p style="font-size: 12px; color: gray; margin-top: 5px;">Đăng nhập để bình luận.</p>'}
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        window.deletePost = function(postId) {
+            if(confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+                remove(ref(db, 'posts/' + postId));
+            }
+        }
+
+        // BÌNH LUẬN
+        window.addComment = function(postId) {
+            const input = document.getElementById(`comment-input-${postId}`);
+            const val = input.value.trim();
+            if(!val) return;
+
+            const commentsRef = ref(db, `posts/${postId}/comments`);
+            const newCommentRef = push(commentsRef);
+            set(newCommentRef, {
+                author: currentUser.username,
+                content: val
+            });
+            input.value = '';
+        }
+
+        // CHAT REALTIME
+        window.sendChatMessage = function() {
+            const input = document.getElementById('chat-input');
+            const val = input.value.trim();
+            if(!val) return;
+
+            const chatRef = ref(db, 'chats');
+            const newChatRef = push(chatRef);
+            set(newChatRef, {
+                author: currentUser.username,
+                content: val,
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            });
+            input.value = '';
+        }
+
+        window.handleChatKey = function(e) {
+            if(e.key === 'Enter') sendChatMessage();
+        }
+
+        function loadChat() {
+            const chatRef = ref(db, 'chats');
+            onValue(chatRef, (snapshot) => {
+                const box = document.getElementById('chat-box');
+                box.innerHTML = '';
+                if(!snapshot.exists()) return;
+
+                const data = snapshot.val();
+                Object.values(data).forEach(msg => {
+                    box.innerHTML += `<div class="chat-msg"><i>[${msg.time}]</i> <b>${msg.author}:</b> ${msg.content}</div>`;
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        // QUẢN LÝ ADMIN (XÓA TÀI KHOẢN)
+        function loadAdminUsers() {
+            const usersRef = ref(db, 'users');
+            onValue(usersRef, (snapshot) => {
+                const listDiv = document.getElementById('admin-users-list');
+                listDiv.innerHTML = '';
+                if(!snapshot.exists()) return;
+
+                const users = snapshot.val();
+                Object.keys(users).forEach(u => {
+                    if(u !== 'admin') {
+                        listDiv.innerHTML += `
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; background: rgba(0,0,0,0.03); padding: 5px 10px; border-radius: 4px;">
+                                <span><b>${u}</b></span>
+                                <button class="danger" style="padding: 2px 6px; font-size: 11px;" onclick="deleteUser('${u}')">Xóa Tài Khoản</button>
+                            </div>
+                        `;
+                    }
+                });
+            });
+        }
+
+        window.deleteUser = function(username) {
+            if(confirm(`Cảnh báo: Bạn có chắc muốn xóa vĩnh viễn tài khoản "${username}" không?`)) {
+                remove(ref(db, 'users/' + username)).then(() => {
+                    alert('Đã xóa tài khoản thành công!');
+                });
+            }
+        }
+    </script>
+</body>
+</html>

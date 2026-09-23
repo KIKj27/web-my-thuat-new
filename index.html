@@ -58,7 +58,6 @@
 
     <!-- KHU VỰC ĐĂNG NHẬP / ĐĂNG KÝ -->
     <div id="authSection" class="card auth-container">
-        <!-- Form Đăng Nhập -->
         <div id="loginForm">
             <h3>🔑 Đăng Nhập</h3>
             <input type="text" id="loginUser" placeholder="Nhập Họ & Tên hoặc tên đăng nhập...">
@@ -67,7 +66,6 @@
             <span class="toggle-link" onclick="toggleAuthMode('register')">Chưa có tài khoản? Hãy đăng ký ngay!</span>
         </div>
 
-        <!-- Form Đăng Ký -->
         <div id="registerForm" class="hidden">
             <h3>📝 Đăng Ký Tài Khoản Học Sinh</h3>
             <input type="text" id="regUser" placeholder="Nhập Họ và Tên của bạn...">
@@ -84,6 +82,7 @@
             <button id="btn-feed" onclick="switchTab('feed')" class="active">🖼️ Triển Lãm Tranh</button>
             <button id="btn-top7" onclick="switchTab('top7')">🏆 Top 7 Tranh Đẹp</button>
             <button id="btn-messages" onclick="switchTab('messages')">💬 Nhắn Tin Riêng</button>
+            <!-- NÚT TAB ĐÃ ĐƯỢC ĐỔI TÊN ĐỂ BẠN DỄ NHẬN BIẾT -->
             <button id="btn-profile" onclick="switchTab('profile')">👤 Hồ Sơ & Đổi Tên/MK</button>
             <button id="btn-chat" onclick="switchTab('chat')">🌐 Phòng Chat Chung</button>
         </div>
@@ -152,13 +151,17 @@
 
                 <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 15px 0;">
 
-                <h4>✏️ Đổi Họ & Tên Hiển Thị</h4>
-                <input type="text" id="newNameInput" placeholder="Nhập Họ & Tên mới...">
-                <button onclick="changeName()" style="margin-top: 8px;">Lưu Tên Mới</button>
+                <!-- MỤC ĐỔI TÊN MỚI THÊM -->
+                <div style="background: #ECFDF5; padding: 15px; border-radius: 8px; border: 1px solid #10B981; margin-bottom: 20px;">
+                    <h4 style="margin-top: 0; color: #047857;">✏️ Đổi Họ & Tên Hiển Thị</h4>
+                    <p style="font-size: 12px; color: gray; margin: 5px 0;">Tên mới sẽ được cập nhật trên mọi bài viết và tin nhắn.</p>
+                    <input type="text" id="newNameInput" placeholder="Nhập Họ & Tên mới của bạn...">
+                    <button onclick="changeName()" class="btn-success" style="margin-top: 8px;">Lưu Tên Mới</button>
+                </div>
 
-                <h4 style="margin-top: 20px;">🖼️ Đổi Ảnh Đại Diện (Avatar)</h4>
+                <h4>🖼️ Đổi Ảnh Đại Diện (Avatar)</h4>
                 <input type="file" id="newAvatarFile" accept="image/*">
-                <button onclick="updateAvatar()" class="btn-success" style="margin-top: 8px;">Cập Nhật Ảnh Đại Diện</button>
+                <button onclick="updateAvatar()" class="btn-primary" style="margin-top: 8px;">Cập Nhật Ảnh Đại Diện</button>
 
                 <h4 style="margin-top: 20px;">🔒 Đổi Mật Khẩu</h4>
                 <input type="password" id="oldPass" placeholder="Mật khẩu cũ...">
@@ -317,7 +320,7 @@
         if (tabId === 'messages') renderDirectUserList();
     }
 
-    // ĐỔI HỌ VÀ TÊN
+    // ĐỔI HỌ VÀ TÊN - CỐT LÕI
     function changeName() {
         const newN = document.getElementById('newNameInput').value.trim();
         if (!newN) return alert('Vui lòng nhập tên mới!');
@@ -329,14 +332,12 @@
 
         const oldN = currentUser.name;
 
-        // Cập nhật mảng users
+        // Cập nhật users
         let uIndex = users.findIndex(x => x.name.toLowerCase() === oldN.toLowerCase());
         if (uIndex !== -1) users[uIndex].name = newN;
-
-        // Cập nhật currentUser
         currentUser.name = newN;
 
-        // Cập nhật tất cả dữ liệu bài viết, bình luận, like
+        // Cập nhật Posts
         posts.forEach(p => {
             if (p.author.toLowerCase() === oldN.toLowerCase()) p.author = newN;
             p.likes = p.likes.map(l => l.toLowerCase() === oldN.toLowerCase() ? newN : l);
@@ -346,12 +347,12 @@
             });
         });
 
-        // Cập nhật chat chung
+        // Cập nhật Chats
         chats.forEach(c => {
             if (c.author.toLowerCase() === oldN.toLowerCase()) c.author = newN;
         });
 
-        // Cập nhật tin nhắn riêng
+        // Cập nhật Messages
         privateMessages.forEach(m => {
             if (m.from.toLowerCase() === oldN.toLowerCase()) m.from = newN;
             if (m.to.toLowerCase() === oldN.toLowerCase()) m.to = newN;

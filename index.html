@@ -21,9 +21,12 @@
         .badge-admin { background: #DC2626; }
         .badge-teacher { background: #059669; }
         .post { border-bottom: 1px solid #E5E7EB; padding-bottom: 15px; margin-bottom: 15px; }
+        .post img { max-width: 100%; border-radius: 8px; margin-top: 10px; max-height: 400px; object-fit: contain; }
         .comment-pinned { background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 8px; border-radius: 4px; margin-top: 5px; color: #1F2937; }
         .chat-box { height: 180px; overflow-y: auto; border: 1px solid #DDD; padding: 10px; border-radius: 6px; background: rgba(0,0,0,0.02); }
         .hidden { display: none; }
+        .auth-box { display: flex; gap: 15px; flex-wrap: wrap; }
+        .auth-col { flex: 1; min-width: 280px; border: 1px solid #E5E7EB; padding: 15px; border-radius: 8px; }
     </style>
 </head>
 <body>
@@ -39,12 +42,21 @@
         </div>
     </div>
 
-    <!-- Khung Đăng Nhập -->
-    <div id="loginCard" class="card">
-        <h3>🔑 Đăng Nhập</h3>
-        <input type="text" id="loginUser" placeholder="Tên đăng nhập (Học sinh nhập tên tùy ý, ADMIN, GIÁO VIÊN)...">
-        <input type="password" id="loginPass" placeholder="Mật khẩu (Học sinh để trống)...">
-        <button onclick="login()">Đăng Nhập</button>
+    <!-- Khung Đăng Nhập / Đăng Ký -->
+    <div id="authCard" class="card auth-box">
+        <div class="auth-col">
+            <h3>🔑 Đăng Nhập</h3>
+            <p style="font-size: 12px; color: gray;">Admin: ADMIN / 14121277<br>Giáo Viên: GIÁO VIÊN / 77089</p>
+            <input type="text" id="loginUser" placeholder="Tên đăng nhập...">
+            <input type="password" id="loginPass" placeholder="Mật khẩu...">
+            <button onclick="login()">Đăng Nhập</button>
+        </div>
+        <div class="auth-col">
+            <h3>📝 Tạo Tài Khoản Học Sinh</h3>
+            <input type="text" id="regUser" placeholder="Tên đăng ký mới...">
+            <input type="password" id="regPass" placeholder="Mật khẩu mới...">
+            <button onclick="register()" style="background: #059669;">Đăng Ký</button>
+        </div>
     </div>
 
     <!-- Nội dung chính khi đã đăng nhập -->
@@ -52,21 +64,23 @@
         
         <!-- Bảng quản lý cho Admin -->
         <div id="adminPanel" class="card hidden">
-            <h3 style="color: #DC2626;">⚙️ Bảng Quản Lý Người Dùng (Dành cho Admin)</h3>
+            <h3 style="color: #DC2626;">⚙️ Bảng Quản Lý Người Dùng (Admin)</h3>
             <div id="userList"></div>
         </div>
 
-        <!-- Khung Đăng Bài -->
+        <!-- Khung Đăng Tác Phẩm & Ảnh -->
         <div class="card">
-            <h3>📝 Đăng Tác Phẩm / Bài Viết</h3>
-            <input type="text" id="postTitle" placeholder="Tiêu đề bài viết...">
-            <textarea id="postContent" rows="3" placeholder="Mô tả tác phẩm..."></textarea>
-            <button onclick="createPost()">Đăng Bài</button>
+            <h3>🖼️ Đăng Tác Phẩm Mỹ Thuật</h3>
+            <input type="text" id="postTitle" placeholder="Tiêu đề tác phẩm...">
+            <textarea id="postContent" rows="2" placeholder="Mô tả tác phẩm..."></textarea>
+            <label style="display:block; margin-top:8px; font-weight:bold; font-size:14px;">Chọn ảnh bức tranh:</label>
+            <input type="file" id="postImage" accept="image/*">
+            <button onclick="createPost()">Đăng Bài Lên Triển Lãm</button>
         </div>
 
         <!-- Danh sách bài viết -->
         <div class="card">
-            <h3>🖼️ Bài Viết & Tác Phẩm</h3>
+            <h3>🎨 Tranh & Bài Viết Của Học Sinh</h3>
             <div id="postList">Chưa có bài viết nào.</div>
         </div>
 
@@ -81,38 +95,46 @@
 </div>
 
 <script>
-    // Khởi tạo dữ liệu
     let currentUser = null;
     let posts = JSON.parse(localStorage.getItem('posts')) || [];
     let chats = JSON.parse(localStorage.getItem('chats')) || [];
     let users = JSON.parse(localStorage.getItem('users')) || [
-        { name: 'KIK', role: 'student', banned: false },
-        { name: 'Hoàng Việt Kiên', role: 'student', banned: false }
+        { name: 'KIK', pass: '123', role: 'student', banned: false }
     ];
+
+    function register() {
+        const u = document.getElementById('regUser').value.trim();
+        const p = document.getElementById('regPass').value.trim();
+        if (!u || !p) return alert('Vui lòng nhập đầy đủ tên và mật khẩu để đăng ký!');
+
+        const exists = users.find(x => x.name.toLowerCase() === u.toLowerCase());
+        if (exists) return alert('Tên đăng nhập này đã tồn tại!');
+
+        users.push({ name: u, pass: p, role: 'student', banned: false });
+        saveData();
+        alert('Đăng ký thành công! Hãy dùng tài khoản vừa tạo để đăng nhập.');
+        document.getElementById('regUser').value = '';
+        document.getElementById('regPass').value = '';
+    }
 
     function login() {
         const u = document.getElementById('loginUser').value.trim();
         const p = document.getElementById('loginPass').value.trim();
-
         if (!u) return alert('Vui lòng nhập tên đăng nhập!');
-
-        // Kiểm tra ban
-        const existingUser = users.find(x => x.name.toLowerCase() === u.toLowerCase());
-        if (existingUser && existingUser.banned) {
-            return alert('Tài khoản này đã bị Banned khỏi hệ thống!');
-        }
 
         if (u === 'ADMIN' && p === '14121277') {
             currentUser = { name: 'ADMIN', role: 'admin' };
         } else if (u === 'GIÁO VIÊN' && p === '77089') {
             currentUser = { name: 'GIÁO VIÊN', role: 'teacher' };
         } else {
-            currentUser = { name: u, role: 'student' };
-            if (!existingUser) users.push({ name: u, role: 'student', banned: false });
-            saveData();
+            const found = users.find(x => x.name.toLowerCase() === u.toLowerCase());
+            if (!found) return alert('Tài khoản không tồn tại! Vui lòng đăng ký trước ở khung bên cạnh.');
+            if (found.banned) return alert('Tài khoản này đã bị Ban!');
+            if (found.pass !== p) return alert('Mật khẩu không chính xác!');
+            currentUser = { name: found.name, role: found.role };
         }
 
-        document.getElementById('loginCard').classList.add('hidden');
+        document.getElementById('authCard').classList.add('hidden');
         document.getElementById('mainContent').classList.remove('hidden');
         document.getElementById('btnLogout').classList.remove('hidden');
 
@@ -124,7 +146,7 @@
 
     function logout() {
         currentUser = null;
-        document.getElementById('loginCard').classList.remove('hidden');
+        document.getElementById('authCard').classList.remove('hidden');
         document.getElementById('mainContent').classList.add('hidden');
         document.getElementById('btnLogout').classList.add('hidden');
         document.getElementById('userInfo').innerText = '';
@@ -147,8 +169,8 @@
         if (currentUser?.role !== 'admin') return;
         const div = document.getElementById('userList');
         div.innerHTML = users.map((u, i) => `
-            <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center;">
-                <span>${u.name} (${u.role}) ${u.banned ? '<b style="color:red">[BANNED]</b>' : ''}</span>
+            <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center; background:rgba(0,0,0,0.03); padding:5px; border-radius:4px;">
+                <span><b>${u.name}</b> (${u.role}) ${u.banned ? '<b style="color:red">[BANNED]</b>' : ''}</span>
                 <div>
                     <button class="btn-sm btn-warning" onclick="toggleBan(${i})">${u.banned ? 'Unban' : 'Ban'}</button>
                     <button class="btn-sm btn-danger" onclick="deleteUser(${i})">Xóa</button>
@@ -172,19 +194,33 @@
     function createPost() {
         const title = document.getElementById('postTitle').value.trim();
         const content = document.getElementById('postContent').value.trim();
-        if (!title || !content) return alert('Vui lòng điền đủ thông tin bài viết!');
+        const fileInput = document.getElementById('postImage');
+        if (!title || !content) return alert('Vui lòng nhập tiêu đề và mô tả bài viết!');
 
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                savePostData(title, content, e.target.result);
+            }
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            savePostData(title, content, null);
+        }
+    }
+
+    function savePostData(title, content, image) {
         posts.unshift({
             id: Date.now(),
             author: currentUser.name,
-            role: currentUser.role,
-            title, content, score: null, review: '',
+            title, content, image,
+            score: null, review: '',
             comments: []
         });
         saveData();
         renderPosts();
         document.getElementById('postTitle').value = '';
         document.getElementById('postContent').value = '';
+        document.getElementById('postImage').value = '';
     }
 
     function renderPosts() {
@@ -193,31 +229,32 @@
 
         div.innerHTML = posts.map((p, i) => `
             <div class="post">
-                <h4>${p.title} <small>bởi ${p.author}</small></h4>
+                <h4>${p.title} <small style="color:gray">bởi ${p.author}</small></h4>
                 <p>${p.content}</p>
+                ${p.image ? `<img src="${p.image}" alt="Tác phẩm mỹ thuật">` : ''}
 
-                <!-- Phần chấm điểm của Giáo viên -->
+                <!-- Chấm điểm của Giáo viên -->
                 ${p.score !== null ? `<div style="background:#E0F2FE; padding:8px; border-radius:6px; margin:8px 0;">
                     <b>💯 Điểm số: ${p.score}/10</b> | <b>Đánh giá của Cô:</b> ${p.review}
                 </div>` : ''}
 
                 ${currentUser.role === 'teacher' ? `
                     <div style="background:#F3F4F6; padding:8px; border-radius:6px; margin:5px 0;">
-                        <input type="number" id="score-${i}" placeholder="Nhập điểm (1-10)..." min="1" max="10" style="width:120px; display:inline-block;">
-                        <input type="text" id="review-${i}" placeholder="Nhập lời nhận xét..." style="width:250px; display:inline-block;">
+                        <input type="number" id="score-${i}" placeholder="Điểm (1-10)..." min="1" max="10" style="width:110px; display:inline-block;">
+                        <input type="text" id="review-${i}" placeholder="Nhận xét của cô..." style="width:230px; display:inline-block;">
                         <button class="btn-sm" onclick="gradePost(${i})">Chấm Điểm</button>
                     </div>
                 ` : ''}
 
-                <!-- Nút xóa bài cho Admin -->
-                ${currentUser.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deletePost(${i})">Xóa Bài Viết</button>` : ''}
+                <!-- Xóa bài cho Admin -->
+                ${currentUser.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deletePost(${i})" style="margin-top:8px;">Xóa Bài Viết</button>` : ''}
 
                 <!-- Bình luận -->
                 <div style="margin-top:10px;">
-                    <h5>Bình luận:</h5>
+                    <h5>Bình luận & Đánh giá:</h5>
                     ${p.comments.map((c, ci) => `
-                        <div class="${c.pinned ? 'comment-pinned' : ''}" style="margin-bottom:4px;">
-                            ${c.pinned ? '📌 <b>[Đã ghim]</b> ' : ''}<b>${c.author}:</b> ${c.text}${(currentUser.role === 'admin' || currentUser.role === 'teacher') ? `
+                        <div class="${c.pinned ? 'comment-pinned' : ''}" style="margin-bottom:4px; padding:4px;">
+                            ${c.pinned ? '📌 <b>[Được ghim]</b> ' : ''}<b>${c.author}:</b> ${c.text}${(currentUser.role === 'admin' || currentUser.role === 'teacher') ? `
                                 <button class="btn-sm btn-warning" onclick="togglePinComment(${i}, ${ci})">${c.pinned ? 'Bỏ ghim' : 'Ghim'}</button>
                             ` : ''}
                             ${currentUser.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteComment(${i}, ${ci})">Xóa</button>` : ''}
@@ -265,7 +302,6 @@
     function togglePinComment(postIndex, commentIndex) {
         const cmt = posts[postIndex].comments[commentIndex];
         cmt.pinned = !cmt.pinned;
-        // Đưa bình luận ghim lên đầu
         posts[postIndex].comments.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
         saveData();
         renderPosts();

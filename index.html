@@ -11,7 +11,7 @@
         .container { max-width: 900px; margin: 0 auto; }
         .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        input, textarea, select, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: 1px solid #CCC; box-sizing: border-box; }
+        input[type="text"], input[type="password"], input[type="number"], textarea, select, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: 1px solid #CCC; box-sizing: border-box; font-size: 14px; }
         button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:hover { opacity: 0.9; }
         .btn-danger { background: #EF4444; }
@@ -35,10 +35,8 @@
         .avatar-sm { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
         .hidden { display: none !important; }
 
-        /* Auth Box Style */
         .auth-container { max-width: 400px; margin: 40px auto; text-align: center; }
         .toggle-link { color: var(--primary); cursor: pointer; text-decoration: underline; font-size: 14px; display: inline-block; margin-top: 15px; }
-        
         .action-btns { display: flex; gap: 10px; margin-top: 10px; }
     </style>
 </head>
@@ -60,11 +58,10 @@
 
     <!-- KHU VỰC ĐĂNG NHẬP / ĐĂNG KÝ -->
     <div id="authSection" class="card auth-container">
-        
         <!-- Form Đăng Nhập -->
         <div id="loginForm">
             <h3>🔑 Đăng Nhập</h3>
-            <input type="text" id="loginUser" placeholder="Tên đăng nhập...">
+            <input type="text" id="loginUser" placeholder="Nhập Họ & Tên hoặc tên đăng nhập...">
             <input type="password" id="loginPass" placeholder="Mật khẩu...">
             <button onclick="login()">Đăng Nhập</button>
             <span class="toggle-link" onclick="toggleAuthMode('register')">Chưa có tài khoản? Hãy đăng ký ngay!</span>
@@ -73,8 +70,8 @@
         <!-- Form Đăng Ký -->
         <div id="registerForm" class="hidden">
             <h3>📝 Đăng Ký Tài Khoản Học Sinh</h3>
-            <input type="text" id="regUser" placeholder="Tên đăng nhập mới...">
-            <input type="password" id="regPass" placeholder="Mật khẩu mới...">
+            <input type="text" id="regUser" placeholder="Nhập Họ và Tên của bạn...">
+            <input type="password" id="regPass" placeholder="Tạo mật khẩu mới...">
             <button onclick="register()" class="btn-success">Đăng Ký</button>
             <span class="toggle-link" onclick="toggleAuthMode('login')">Đã có tài khoản? Đăng nhập tại đây.</span>
         </div>
@@ -84,15 +81,15 @@
     <div id="mainContent" class="hidden">
         <!-- Thanh Menu Tabs -->
         <div class="nav-tabs">
-            <button id="tabFeedBtn" onclick="switchTab('feed')" class="active">🖼️ Triển Lãm Tranh</button>
-            <button id="tabTopBtn" onclick="switchTab('top7')">🏆 Top 7 Tranh Đẹp</button>
-            <button id="tabMessageBtn" onclick="switchTab('messages')">💬 Nhắn Tin Riêng</button>
-            <button id="tabProfileBtn" onclick="switchTab('profile')">👤 Hồ Sơ & Đổi MK</button>
-            <button id="tabChatBtn" onclick="switchTab('chat')">🌐 Phòng Chat Chung</button>
+            <button id="btn-feed" onclick="switchTab('feed')" class="active">🖼️ Triển Lãm Tranh</button>
+            <button id="btn-top7" onclick="switchTab('top7')">🏆 Top 7 Tranh Đẹp</button>
+            <button id="btn-messages" onclick="switchTab('messages')">💬 Nhắn Tin Riêng</button>
+            <button id="btn-profile" onclick="switchTab('profile')">👤 Hồ Sơ & Đổi MK</button>
+            <button id="btn-chat" onclick="switchTab('chat')">🌐 Phòng Chat Chung</button>
         </div>
 
         <!-- TAB 1: TRIỂN LÃM & ĐĂNG BÀI -->
-        <div id="tabFeed" class="tab-content">
+        <div id="tab-feed">
             <div class="card">
                 <h3>🖼️ Đăng Tác Phẩm Mỹ Thuật</h3>
                 <input type="text" id="postTitle" placeholder="Tiêu đề tác phẩm...">
@@ -114,16 +111,16 @@
         </div>
 
         <!-- TAB 2: TOP 7 TRANH ĐẸP NHẤT -->
-        <div id="tabTop7" class="tab-content hidden">
+        <div id="tab-top7" class="hidden">
             <div class="card">
                 <h3>🏆 Top 7 Tranh Được Yêu Thích Nhất</h3>
-                <p style="color: gray; font-size: 13px;">Bảng xếp hạng dựa trên số lượt Like (Thích) của cộng đồng!</p>
+                <p style="color: gray; font-size: 13px;">Bảng xếp hạng dựa trên số lượt Thích (👍) của cộng đồng!</p>
                 <div id="top7List">Chưa có dữ liệu.</div>
             </div>
         </div>
 
         <!-- TAB 3: NHẮN TIN RIÊNG -->
-        <div id="tabMessages" class="tab-content hidden">
+        <div id="tab-messages" class="hidden">
             <div class="card" style="display: flex; gap: 15px; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 220px; border-right: 1px solid #E5E7EB; padding-right: 10px;">
                     <h4>Danh Sách Thành Viên</h4>
@@ -141,7 +138,7 @@
         </div>
 
         <!-- TAB 4: HỒ SƠ & ĐỔI MẬT KHẨU -->
-        <div id="tabProfile" class="tab-content hidden">
+        <div id="tab-profile" class="hidden">
             <div class="card" style="max-width: 500px; margin: 0 auto;">
                 <h3>👤 Hồ Sơ Người Dùng</h3>
                 <div style="text-align: center; margin-bottom: 15px;">
@@ -167,7 +164,7 @@
         </div>
 
         <!-- TAB 5: PHÒNG CHAT CHUNG -->
-        <div id="tabChat" class="tab-content hidden">
+        <div id="tab-chat" class="hidden">
             <div class="card">
                 <h3>🌐 Phòng Chat Chung</h3>
                 <div id="chatBox" class="chat-box"></div>
@@ -179,14 +176,13 @@
 </div>
 
 <script>
-    // Xử lý nạp dữ liệu từ localStorage
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
     let posts = JSON.parse(localStorage.getItem('posts')) || [];
     let chats = JSON.parse(localStorage.getItem('chats')) || [];
     let privateMessages = JSON.parse(localStorage.getItem('privateMessages')) || [];
     let users = JSON.parse(localStorage.getItem('users')) || [];
 
-    // Chữa lỗi mất tài khoản Admin / Giáo viên
+    // Tự động khởi tạo tài khoản Admin & Giáo viên
     function initSystemAccounts() {
         if (!users.find(u => u.role === 'admin')) {
             users.push({ name: 'Admin', pass: '14121277', role: 'admin', banned: false, avatar: '', hearts: 0 });
@@ -195,7 +191,6 @@
             users.push({ name: 'Cô Giáo', pass: '77089', role: 'teacher', banned: false, avatar: '', hearts: 0 });
         }
         
-        // Nâng cấp dữ liệu bài viết cũ (đổi votes thành likes/dislikes)
         posts.forEach(p => {
             if (!p.likes) p.likes = p.votes || [];
             if (!p.dislikes) p.dislikes = [];
@@ -206,10 +201,9 @@
     initSystemAccounts();
     let chattingWithUser = null;
 
-    // Tự động khôi phục phiên đăng nhập
     window.onload = function() {
         if (currentUser) {
-            let fresh = users.find(u => u.name === currentUser.name);
+            let fresh = users.find(u => u.name.toLowerCase() === currentUser.name.toLowerCase());
             if (fresh) {
                 currentUser = fresh;
                 showMainContent();
@@ -236,7 +230,7 @@
         if (u.toLowerCase() === 'admin' || u.toLowerCase() === 'cô giáo') return alert('Tên này không được phép đăng ký!');
 
         const exists = users.find(x => x.name.toLowerCase() === u.toLowerCase());
-        if (exists) return alert('Tên đăng nhập đã tồn tại! Vui lòng chọn tên khác.');
+        if (exists) return alert('Tên này đã được dùng! Vui lòng chọn tên khác.');
 
         users.push({ name: u, pass: p, role: 'student', banned: false, avatar: '', hearts: 0 });
         saveData();
@@ -252,7 +246,7 @@
         if (!u) return alert('Vui lòng nhập tên đăng nhập!');
 
         let found = users.find(x => x.name.toLowerCase() === u.toLowerCase());
-        if (!found) return alert('Tài khoản không tồn tại!');
+        if (!found) return alert('Tài khoản không tồn tại! Hãy đăng ký tài khoản mới.');
         if (found.banned) return alert('Tài khoản của bạn đã bị khóa (Ban)!');
         if (found.pass !== p) return alert('Mật khẩu không chính xác!');
 
@@ -268,6 +262,7 @@
         document.getElementById('userHeaderInfo').classList.remove('hidden');
 
         updateUserUI();
+        switchTab('feed');
         renderPosts();
         renderChats();
         renderAdminPanel();
@@ -281,7 +276,6 @@
         document.getElementById('btnLogout').classList.add('hidden');
         document.getElementById('userHeaderInfo').classList.add('hidden');
         
-        // Reset form đăng nhập
         document.getElementById('loginUser').value = '';
         document.getElementById('loginPass').value = '';
         toggleAuthMode('login');
@@ -302,19 +296,25 @@
         document.getElementById('profileHearts').innerText = currentUser.hearts || 0;
     }
 
-    function switchTab(tabName) {
-        ['feed', 'top7', 'messages', 'profile', 'chat'].forEach(t => {
-            document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('hidden');
-            document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1) + 'Btn').classList.remove('active');
+    // Chuyển Tab chuẩn xác không bao giờ bị lỗi
+    function switchTab(tabId) {
+        const tabs = ['feed', 'top7', 'messages', 'profile', 'chat'];
+        tabs.forEach(t => {
+            const content = document.getElementById('tab-' + t);
+            const btn = document.getElementById('btn-' + t);
+            if (content) content.classList.add('hidden');
+            if (btn) btn.classList.remove('active');
         });
-        document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.remove('hidden');
-        document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Btn').classList.add('active');
 
-        if (tabName === 'top7') renderTop7();
-        if (tabName === 'messages') renderDirectUserList();
+        const activeContent = document.getElementById('tab-' + tabId);
+        const activeBtn = document.getElementById('btn-' + tabId);
+        if (activeContent) activeContent.classList.remove('hidden');
+        if (activeBtn) activeBtn.classList.add('active');
+
+        if (tabId === 'top7') renderTop7();
+        if (tabId === 'messages') renderDirectUserList();
     }
 
-    // ĐỔI ẢNH ĐẠI DIỆN & MẬT KHẨU
     function updateAvatar() {
         const fileInput = document.getElementById('newAvatarFile');
         if (!fileInput.files || !fileInput.files[0]) return alert('Vui lòng chọn file ảnh đại diện!');
@@ -322,7 +322,7 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             currentUser.avatar = e.target.result;
-            let uIndex = users.findIndex(x => x.name === currentUser.name);
+            let uIndex = users.findIndex(x => x.name.toLowerCase() === currentUser.name.toLowerCase());
             if (uIndex !== -1) users[uIndex].avatar = currentUser.avatar;
             saveData();
             updateUserUI();
@@ -338,7 +338,7 @@
         if (currentUser.pass !== oldP) return alert('Mật khẩu cũ không chính xác!');
 
         currentUser.pass = newP;
-        let uIndex = users.findIndex(x => x.name === currentUser.name);
+        let uIndex = users.findIndex(x => x.name.toLowerCase() === currentUser.name.toLowerCase());
         if (uIndex !== -1) users[uIndex].pass = newP;
         saveData();
         alert('Đổi mật khẩu thành công!');
@@ -346,7 +346,6 @@
         document.getElementById('newPass').value = '';
     }
 
-    // QUẢN LÝ ADMIN
     function renderAdminPanel() {
         if (currentUser?.role !== 'admin') {
             document.getElementById('adminPanel').classList.add('hidden');
@@ -372,14 +371,13 @@
     }
 
     function deleteUser(index) {
-        if(confirm("Bạn có chắc chắn muốn xóa tài khoản này vĩnh viễn?")) {
+        if(confirm("Bạn có chắc chắn muốn xóa tài khoản này?")) {
             users.splice(index, 1);
             saveData();
             renderAdminPanel();
         }
     }
 
-    // ĐĂNG BÀI & LIKE/DISLIKE
     function createPost() {
         const title = document.getElementById('postTitle').value.trim();
         const content = document.getElementById('postContent').value.trim();
@@ -414,20 +412,16 @@
         document.getElementById('postImage').value = '';
     }
 
-    // Xử lý Like
     function toggleLike(postId) {
         let p = posts.find(x => x.id === postId);
         let uName = currentUser.name;
         
-        // Nếu đang dislike thì bỏ dislike đi
         p.dislikes = p.dislikes.filter(n => n !== uName);
 
         if (p.likes.includes(uName)) {
-            // Bỏ like
             p.likes = p.likes.filter(n => n !== uName);
             updateAuthorHearts(p.author, -1);
         } else {
-            // Thêm like
             p.likes.push(uName);
             updateAuthorHearts(p.author, 1);
         }
@@ -436,22 +430,18 @@
         if(currentUser.name === p.author) updateUserUI();
     }
 
-    // Xử lý Dislike
     function toggleDislike(postId) {
         let p = posts.find(x => x.id === postId);
         let uName = currentUser.name;
 
-        // Nếu đang like thì bỏ like đi và trừ điểm tym của tác giả
         if (p.likes.includes(uName)) {
             p.likes = p.likes.filter(n => n !== uName);
             updateAuthorHearts(p.author, -1);
         }
 
         if (p.dislikes.includes(uName)) {
-            // Bỏ dislike
             p.dislikes = p.dislikes.filter(n => n !== uName);
         } else {
-            // Thêm dislike
             p.dislikes.push(uName);
         }
         saveData();
@@ -460,7 +450,7 @@
     }
 
     function updateAuthorHearts(authorName, change) {
-        let author = users.find(u => u.name === authorName);
+        let author = users.find(u => u.name.toLowerCase() === authorName.toLowerCase());
         if (author) author.hearts = Math.max(0, (author.hearts || 0) + change);
     }
 
@@ -468,7 +458,7 @@
         const div = document.getElementById('postList');
         if (posts.length === 0) { div.innerHTML = 'Chưa có tác phẩm nào.'; return; }
 
-        div.innerHTML = posts.map((p, i) => {
+        div.innerHTML = posts.map((p) => {
             let hasLiked = p.likes.includes(currentUser.name);
             let hasDisliked = p.dislikes.includes(currentUser.name);
             return `
@@ -500,7 +490,6 @@
 
                 ${currentUser.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deletePost(${p.id})" style="margin-top:5px;">Xóa Bài Viết</button>` : ''}
 
-                <!-- Bình luận -->
                 <div style="margin-top:10px;">
                     <h5>Bình luận & Đánh giá:</h5>
                     ${p.comments.map((c, ci) => `
@@ -566,10 +555,8 @@
         renderPosts();
     }
 
-    // TOP 7 TRANH ĐẸP NHẤT
     function renderTop7() {
         const div = document.getElementById('top7List');
-        // Xếp hạng dựa trên số Like
         let sortedPosts = [...posts].sort((a, b) => b.likes.length - a.likes.length).slice(0, 7);
         
         if (sortedPosts.length === 0 || sortedPosts[0].likes.length === 0) {
@@ -592,10 +579,9 @@
         `).join('');
     }
 
-    // NHẮN TIN RIÊNG
     function renderDirectUserList() {
         const div = document.getElementById('directUserList');
-        div.innerHTML = users.filter(u => u.name !== currentUser.name).map(u => `
+        div.innerHTML = users.filter(u => u.name.toLowerCase() !== currentUser.name.toLowerCase()).map(u => `
             <div onclick="selectChatUser('${u.name}')" style="padding: 8px; margin-bottom: 5px; background: rgba(0,0,0,0.03); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                 <img src="${u.avatar || 'https://via.placeholder.com/30'}" class="avatar-sm" style="width:30px; height:30px;" alt="">
                 <span><b>${u.name}</b> (${u.role})</span>
@@ -631,14 +617,14 @@
         if (!chattingWithUser) return;
 
         let filtered = privateMessages.filter(m => 
-            (m.from === currentUser.name && m.to === chattingWithUser) ||
-            (m.from === chattingWithUser && m.to === currentUser.name)
+            (m.from.toLowerCase() === currentUser.name.toLowerCase() && m.to.toLowerCase() === chattingWithUser.toLowerCase()) ||
+            (m.from.toLowerCase() === chattingWithUser.toLowerCase() && m.to.toLowerCase() === currentUser.name.toLowerCase())
         );
 
         box.innerHTML = filtered.map(m => `
-            <div style="margin-bottom: 6px; text-align: ${m.from === currentUser.name ? 'right' : 'left'};">
+            <div style="margin-bottom: 6px; text-align: ${m.from.toLowerCase() === currentUser.name.toLowerCase() ? 'right' : 'left'};">
                 <span style="font-size: 11px; color: gray;">[${m.time}]</span>
-                <span style="background: ${m.from === currentUser.name ? '#4F46E5; color: white;' : '#E5E7EB; color: black;'}; padding: 6px 10px; border-radius: 8px; display: inline-block; text-align: left;">
+                <span style="background: ${m.from.toLowerCase() === currentUser.name.toLowerCase() ? '#4F46E5; color: white;' : '#E5E7EB; color: black;'}; padding: 6px 10px; border-radius: 8px; display: inline-block; text-align: left;">
                     <b>${m.from}:</b> ${m.text}
                 </span>
             </div>
@@ -646,7 +632,6 @@
         box.scrollTop = box.scrollHeight;
     }
 
-    // PHÒNG CHAT CHUNG
     function sendChat() {
         const msg = document.getElementById('chatMsg').value.trim();
         if (!msg) return;

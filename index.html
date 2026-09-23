@@ -65,16 +65,16 @@
     <div id="authSection" class="card auth-container">
         <div id="loginForm">
             <h3>🔑 Đăng Nhập</h3>
-            <input type="text" id="loginUser" placeholder="Nhập Họ & Tên hoặc tên đăng nhập...">
-            <input type="password" id="loginPass" placeholder="Mật khẩu...">
+            <input type="text" id="loginUser" inputmode="text" autocomplete="off" placeholder="Nhập Họ & Tên hoặc tên đăng nhập...">
+            <input type="password" id="loginPass" autocomplete="off" placeholder="Mật khẩu...">
             <button onclick="login()">Đăng Nhập</button>
             <span class="toggle-link" onclick="toggleAuthMode('register')">Chưa có tài khoản? Hãy đăng ký ngay!</span>
         </div>
 
         <div id="registerForm" class="hidden">
             <h3>📝 Đăng Ký Tài Khoản Học Sinh</h3>
-            <input type="text" id="regUser" placeholder="Nhập Họ và Tên của bạn...">
-            <input type="password" id="regPass" placeholder="Tạo mật khẩu mới...">
+            <input type="text" id="regUser" inputmode="text" autocomplete="off" placeholder="Nhập Họ và Tên của bạn...">
+            <input type="password" id="regPass" autocomplete="off" placeholder="Tạo mật khẩu mới...">
             <button onclick="register()" class="btn-success">Đăng Ký</button>
             <span class="toggle-link" onclick="toggleAuthMode('login')">Đã có tài khoản? Đăng nhập tại đây.</span>
         </div>
@@ -156,7 +156,7 @@
 
                 <div style="background: #ECFDF5; padding: 15px; border-radius: 8px; border: 1px solid #10B981; margin-bottom: 20px;">
                     <h4 style="margin-top: 0; color: #047857;">✏️ Đổi Họ & Tên Hiển Thị</h4>
-                    <input type="text" id="newNameInput" placeholder="Nhập Họ & Tên mới của bạn...">
+                    <input type="text" id="newNameInput" inputmode="text" autocomplete="off" placeholder="Nhập Họ & Tên mới của bạn...">
                     <button onclick="changeName()" class="btn-success" style="margin-top: 8px;">Lưu Tên Mới</button>
                 </div>
 
@@ -184,7 +184,6 @@
 </div>
 
 <script>
-    // 🟢 CẤU HÌNH FIREBASE ĐÃ ĐƯỢC ĐIỀN CHÍNH XÁC
     const firebaseConfig = {
       apiKey: "AIzaSyCxfqAClfQLmVQfJq1S2MUQZuQH4oRwET8",
       authDomain: "webmythuat-157c0.firebaseapp.com",
@@ -208,7 +207,9 @@
 
     // KẾT NỐI VÀ ĐỒNG BỘ DỮ LIỆU REALTIME
     db.ref('users').on('value', snapshot => {
-        users = snapshot.val() || [];
+        let rawUsers = snapshot.val();
+        users = rawUsers ? (Array.isArray(rawUsers) ? rawUsers : Object.values(rawUsers)) : [];
+
         if (users.length === 0) {
             users = [
                 { name: 'Admin', pass: '14121277', role: 'admin', banned: false, avatar: '', hearts: 0 },
@@ -216,13 +217,22 @@
             ];
             db.ref('users').set(users);
         }
+
+        // KIỂM TRA TỰ ĐỘNG ĐẨY VĂNG RA NẾU BỊ KHÓA HOẶC XÓA (REALTIME KICK)
         if (currentUser) {
             let fresh = users.find(u => u.name.toLowerCase() === currentUser.name.toLowerCase());
-            if (fresh) {
+            if (!fresh) {
+                alert('Tài khoản của bạn đã bị xóa khỏi hệ thống!');
+                logout();
+            } else if (fresh.banned) {
+                alert('Tài khoản của bạn đã bị khóa (Ban) bởi Admin!');
+                logout();
+            } else {
                 currentUser = fresh;
                 updateUserUI();
             }
         }
+
         renderAdminPanel();
         renderDirectUserList();
     });
@@ -659,7 +669,7 @@
         const div = document.getElementById('directUserList');
         if (!currentUser) return;
         div.innerHTML = users.filter(u => u.name.toLowerCase() !== currentUser.name.toLowerCase()).map(u => `
-            <div onclick="selectChatUser('${u.name}')" style="padding: 8px; margin-bottom: 5px; background: rgba(0,0,0,0.03); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <div onclick="selectChatUser('${u.name}')" style="padding: 8px; margin-bottom: 5px; background: rgba(0,0,0,0.03); border-radius: 6px; cursor: pointer; display: flex; align- items: center; gap: 8px;">
                 <img src="${u.avatar || 'https://via.placeholder.com/30'}" class="avatar-sm" style="width:30px; height:30px;" alt="">
                 <span><b>${u.name}</b> (${u.role})</span>
             </div>

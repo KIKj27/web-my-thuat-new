@@ -84,7 +84,7 @@
             <button id="btn-feed" onclick="switchTab('feed')" class="active">🖼️ Triển Lãm Tranh</button>
             <button id="btn-top7" onclick="switchTab('top7')">🏆 Top 7 Tranh Đẹp</button>
             <button id="btn-messages" onclick="switchTab('messages')">💬 Nhắn Tin Riêng</button>
-            <button id="btn-profile" onclick="switchTab('profile')">👤 Hồ Sơ & Đổi MK</button>
+            <button id="btn-profile" onclick="switchTab('profile')">👤 Hồ Sơ & Đổi Tên/MK</button>
             <button id="btn-chat" onclick="switchTab('chat')">🌐 Phòng Chat Chung</button>
         </div>
 
@@ -137,7 +137,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: HỒ SƠ & ĐỔI MẬT KHẨU -->
+        <!-- TAB 4: HỒ SƠ, ĐỔI TÊN & ĐỔI MẬT KHẨU -->
         <div id="tab-profile" class="hidden">
             <div class="card" style="max-width: 500px; margin: 0 auto;">
                 <h3>👤 Hồ Sơ Người Dùng</h3>
@@ -152,7 +152,11 @@
 
                 <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 15px 0;">
 
-                <h4>🖼️ Đổi Ảnh Đại Diện (Avatar)</h4>
+                <h4>✏️ Đổi Họ & Tên Hiển Thị</h4>
+                <input type="text" id="newNameInput" placeholder="Nhập Họ & Tên mới...">
+                <button onclick="changeName()" style="margin-top: 8px;">Lưu Tên Mới</button>
+
+                <h4 style="margin-top: 20px;">🖼️ Đổi Ảnh Đại Diện (Avatar)</h4>
                 <input type="file" id="newAvatarFile" accept="image/*">
                 <button onclick="updateAvatar()" class="btn-success" style="margin-top: 8px;">Cập Nhật Ảnh Đại Diện</button>
 
@@ -182,7 +186,6 @@
     let privateMessages = JSON.parse(localStorage.getItem('privateMessages')) || [];
     let users = JSON.parse(localStorage.getItem('users')) || [];
 
-    // Tự động khởi tạo tài khoản Admin & Giáo viên
     function initSystemAccounts() {
         if (!users.find(u => u.role === 'admin')) {
             users.push({ name: 'Admin', pass: '14121277', role: 'admin', banned: false, avatar: '', hearts: 0 });
@@ -296,7 +299,6 @@
         document.getElementById('profileHearts').innerText = currentUser.hearts || 0;
     }
 
-    // Chuyển Tab chuẩn xác không bao giờ bị lỗi
     function switchTab(tabId) {
         const tabs = ['feed', 'top7', 'messages', 'profile', 'chat'];
         tabs.forEach(t => {
@@ -313,6 +315,53 @@
 
         if (tabId === 'top7') renderTop7();
         if (tabId === 'messages') renderDirectUserList();
+    }
+
+    // ĐỔI HỌ VÀ TÊN
+    function changeName() {
+        const newN = document.getElementById('newNameInput').value.trim();
+        if (!newN) return alert('Vui lòng nhập tên mới!');
+        if (newN.toLowerCase() === currentUser.name.toLowerCase()) return alert('Tên mới trùng với tên hiện tại!');
+        if (newN.toLowerCase() === 'admin' || newN.toLowerCase() === 'cô giáo') return alert('Không được dùng tên hệ thống!');
+
+        const exists = users.find(x => x.name.toLowerCase() === newN.toLowerCase());
+        if (exists) return alert('Tên này đã được người khác sử dụng!');
+
+        const oldN = currentUser.name;
+
+        // Cập nhật mảng users
+        let uIndex = users.findIndex(x => x.name.toLowerCase() === oldN.toLowerCase());
+        if (uIndex !== -1) users[uIndex].name = newN;
+
+        // Cập nhật currentUser
+        currentUser.name = newN;
+
+        // Cập nhật tất cả dữ liệu bài viết, bình luận, like
+        posts.forEach(p => {
+            if (p.author.toLowerCase() === oldN.toLowerCase()) p.author = newN;
+            p.likes = p.likes.map(l => l.toLowerCase() === oldN.toLowerCase() ? newN : l);
+            p.dislikes = p.dislikes.map(d => d.toLowerCase() === oldN.toLowerCase() ? newN : d);
+            p.comments.forEach(c => {
+                if (c.author.toLowerCase() === oldN.toLowerCase()) c.author = newN;
+            });
+        });
+
+        // Cập nhật chat chung
+        chats.forEach(c => {
+            if (c.author.toLowerCase() === oldN.toLowerCase()) c.author = newN;
+        });
+
+        // Cập nhật tin nhắn riêng
+        privateMessages.forEach(m => {
+            if (m.from.toLowerCase() === oldN.toLowerCase()) m.from = newN;
+            if (m.to.toLowerCase() === oldN.toLowerCase()) m.to = newN;
+        });
+
+        saveData();
+        updateUserUI();
+        renderPosts();
+        alert('Đổi tên thành công!');
+        document.getElementById('newNameInput').value = '';
     }
 
     function updateAvatar() {
@@ -416,10 +465,10 @@
         let p = posts.find(x => x.id === postId);
         let uName = currentUser.name;
         
-        p.dislikes = p.dislikes.filter(n => n !== uName);
+        p.dislikes = p.dislikes.filter(n => n.toLowerCase() !== uName.toLowerCase());
 
-        if (p.likes.includes(uName)) {
-            p.likes = p.likes.filter(n => n !== uName);
+        if (p.likes.some(l => l.toLowerCase() === uName.toLowerCase())) {
+            p.likes = p.likes.filter(n => n.toLowerCase() !== uName.toLowerCase());
             updateAuthorHearts(p.author, -1);
         } else {
             p.likes.push(uName);
@@ -427,26 +476,26 @@
         }
         saveData();
         renderPosts();
-        if(currentUser.name === p.author) updateUserUI();
+        if(currentUser.name.toLowerCase() === p.author.toLowerCase()) updateUserUI();
     }
 
     function toggleDislike(postId) {
         let p = posts.find(x => x.id === postId);
         let uName = currentUser.name;
 
-        if (p.likes.includes(uName)) {
-            p.likes = p.likes.filter(n => n !== uName);
+        if (p.likes.some(l => l.toLowerCase() === uName.toLowerCase())) {
+            p.likes = p.likes.filter(n => n.toLowerCase() !== uName.toLowerCase());
             updateAuthorHearts(p.author, -1);
         }
 
-        if (p.dislikes.includes(uName)) {
-            p.dislikes = p.dislikes.filter(n => n !== uName);
+        if (p.dislikes.some(d => d.toLowerCase() === uName.toLowerCase())) {
+            p.dislikes = p.dislikes.filter(n => n.toLowerCase() !== uName.toLowerCase());
         } else {
             p.dislikes.push(uName);
         }
         saveData();
         renderPosts();
-        if(currentUser.name === p.author) updateUserUI();
+        if(currentUser.name.toLowerCase() === p.author.toLowerCase()) updateUserUI();
     }
 
     function updateAuthorHearts(authorName, change) {
@@ -459,8 +508,8 @@
         if (posts.length === 0) { div.innerHTML = 'Chưa có tác phẩm nào.'; return; }
 
         div.innerHTML = posts.map((p) => {
-            let hasLiked = p.likes.includes(currentUser.name);
-            let hasDisliked = p.dislikes.includes(currentUser.name);
+            let hasLiked = p.likes.some(l => l.toLowerCase() === currentUser.name.toLowerCase());
+            let hasDisliked = p.dislikes.some(d => d.toLowerCase() === currentUser.name.toLowerCase());
             return `
             <div class="post">
                 <h4>${p.title} <small style="color:gray">bởi ${p.author}</small></h4>

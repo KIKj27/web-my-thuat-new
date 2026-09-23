@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Triển Lãm Mỹ Thuật Online</title>
+    
+    <!-- TÍCH HỢP HỆ THỐNG FIREBASE DỮ LIỆU THỰC -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+
     <style>
         :root { --primary: #4F46E5; --bg: #F3F4F6; --card: #FFFFFF; --text: #1F2937; }
         .dark-mode { --bg: #111827; --card: #1F2937; --text: #F9FAFB; }
@@ -45,7 +50,7 @@
 <div class="container">
     <!-- Header -->
     <div class="card header">
-        <h2>🎨 Triển Lãm Mỹ Thuật</h2>
+        <h2>🎨 Triển Lãm Mỹ Thuật <small style="font-size:12px; color:#10B981;">● Online Realtime</small></h2>
         <div style="display: flex; align-items: center; gap: 10px;">
             <button onclick="toggleDarkMode()" class="btn-sm btn-secondary">🌙 Đổi Giao Diện</button>
             <div id="userHeaderInfo" class="hidden" style="display: flex; align-items: center; gap: 8px;">
@@ -77,12 +82,10 @@
 
     <!-- NỘI DUNG CHÍNH (Khi đã đăng nhập) -->
     <div id="mainContent" class="hidden">
-        <!-- Thanh Menu Tabs -->
         <div class="nav-tabs">
             <button id="btn-feed" onclick="switchTab('feed')" class="active">🖼️ Triển Lãm Tranh</button>
             <button id="btn-top7" onclick="switchTab('top7')">🏆 Top 7 Tranh Đẹp</button>
             <button id="btn-messages" onclick="switchTab('messages')">💬 Nhắn Tin Riêng</button>
-            <!-- NÚT TAB ĐÃ ĐƯỢC ĐỔI TÊN ĐỂ BẠN DỄ NHẬN BIẾT -->
             <button id="btn-profile" onclick="switchTab('profile')">👤 Hồ Sơ & Đổi Tên/MK</button>
             <button id="btn-chat" onclick="switchTab('chat')">🌐 Phòng Chat Chung</button>
         </div>
@@ -105,7 +108,7 @@
 
             <div class="card">
                 <h3>🎨 Các Tác Phẩm Nổi Bật</h3>
-                <div id="postList">Chưa có bài viết nào.</div>
+                <div id="postList">Đang tải dữ liệu từ máy chủ...</div>
             </div>
         </div>
 
@@ -113,7 +116,7 @@
         <div id="tab-top7" class="hidden">
             <div class="card">
                 <h3>🏆 Top 7 Tranh Được Yêu Thích Nhất</h3>
-                <p style="color: gray; font-size: 13px;">Bảng xếp hạng dựa trên số lượt Thích (👍) của cộng đồng!</p>
+                <p style="color: gray; font-size: 13px;">Bảng xếp hạng tự động tính theo lượt Thích (👍) trên toàn hệ thống!</p>
                 <div id="top7List">Chưa có dữ liệu.</div>
             </div>
         </div>
@@ -151,17 +154,15 @@
 
                 <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 15px 0;">
 
-                <!-- MỤC ĐỔI TÊN MỚI THÊM -->
                 <div style="background: #ECFDF5; padding: 15px; border-radius: 8px; border: 1px solid #10B981; margin-bottom: 20px;">
                     <h4 style="margin-top: 0; color: #047857;">✏️ Đổi Họ & Tên Hiển Thị</h4>
-                    <p style="font-size: 12px; color: gray; margin: 5px 0;">Tên mới sẽ được cập nhật trên mọi bài viết và tin nhắn.</p>
                     <input type="text" id="newNameInput" placeholder="Nhập Họ & Tên mới của bạn...">
                     <button onclick="changeName()" class="btn-success" style="margin-top: 8px;">Lưu Tên Mới</button>
                 </div>
 
                 <h4>🖼️ Đổi Ảnh Đại Diện (Avatar)</h4>
                 <input type="file" id="newAvatarFile" accept="image/*">
-                <button onclick="updateAvatar()" class="btn-primary" style="margin-top: 8px;">Cập Nhật Ảnh Đại Diện</button>
+                <button onclick="updateAvatar()" style="margin-top: 8px;">Cập Nhật Ảnh Đại Diện</button>
 
                 <h4 style="margin-top: 20px;">🔒 Đổi Mật Khẩu</h4>
                 <input type="password" id="oldPass" placeholder="Mật khẩu cũ...">
@@ -183,41 +184,86 @@
 </div>
 
 <script>
-    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-    let posts = JSON.parse(localStorage.getItem('posts')) || [];
-    let chats = JSON.parse(localStorage.getItem('chats')) || [];
-    let privateMessages = JSON.parse(localStorage.getItem('privateMessages')) || [];
-    let users = JSON.parse(localStorage.getItem('users')) || [];
+    // 🟢 CẤU HÌNH FIREBASE ĐÃ ĐƯỢC ĐIỀN CHÍNH XÁC
+    const firebaseConfig = {
+      apiKey: "AIzaSyCxfqAClfQLmVQfJq1S2MUQZuQH4oRwET8",
+      authDomain: "webmythuat-157c0.firebaseapp.com",
+      databaseURL: "https://webmythuat-157c0-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "webmythuat-157c0",
+      storageBucket: "webmythuat-157c0.firebasestorage.app",
+      messagingSenderId: "243127246874",
+      appId: "1:243127246874:web:5bcb40297d8c283e0771a3",
+      measurementId: "G-MNYV1HXYEP"
+    };
 
-    function initSystemAccounts() {
-        if (!users.find(u => u.role === 'admin')) {
-            users.push({ name: 'Admin', pass: '14121277', role: 'admin', banned: false, avatar: '', hearts: 0 });
-        }
-        if (!users.find(u => u.role === 'teacher')) {
-            users.push({ name: 'Cô Giáo', pass: '77089', role: 'teacher', banned: false, avatar: '', hearts: 0 });
-        }
-        
-        posts.forEach(p => {
-            if (!p.likes) p.likes = p.votes || [];
-            if (!p.dislikes) p.dislikes = [];
-        });
-        saveData();
-    }
-    
-    initSystemAccounts();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
+    let posts = [];
+    let chats = [];
+    let privateMessages = [];
+    let users = [];
     let chattingWithUser = null;
 
-    window.onload = function() {
+    // KẾT NỐI VÀ ĐỒNG BỘ DỮ LIỆU REALTIME
+    db.ref('users').on('value', snapshot => {
+        users = snapshot.val() || [];
+        if (users.length === 0) {
+            users = [
+                { name: 'Admin', pass: '14121277', role: 'admin', banned: false, avatar: '', hearts: 0 },
+                { name: 'Cô Giáo', pass: '77089', role: 'teacher', banned: false, avatar: '', hearts: 0 }
+            ];
+            db.ref('users').set(users);
+        }
         if (currentUser) {
             let fresh = users.find(u => u.name.toLowerCase() === currentUser.name.toLowerCase());
             if (fresh) {
                 currentUser = fresh;
-                showMainContent();
-            } else {
-                logout();
+                updateUserUI();
             }
         }
+        renderAdminPanel();
+        renderDirectUserList();
+    });
+
+    db.ref('posts').on('value', snapshot => {
+        let data = snapshot.val();
+        posts = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+        posts.forEach(p => {
+            if (!p.likes) p.likes = [];
+            if (!p.dislikes) p.dislikes = [];
+            if (!p.comments) p.comments = [];
+        });
+        renderPosts();
+        if (!document.getElementById('tab-top7').classList.contains('hidden')) renderTop7();
+    });
+
+    db.ref('chats').on('value', snapshot => {
+        let data = snapshot.val();
+        chats = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+        renderChats();
+    });
+
+    db.ref('privateMessages').on('value', snapshot => {
+        let data = snapshot.val();
+        privateMessages = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+        renderPrivateMessages();
+    });
+
+    window.onload = function() {
+        if (currentUser) {
+            showMainContent();
+        }
     };
+
+    function saveData() {
+        db.ref('users').set(users);
+        db.ref('posts').set(posts);
+        db.ref('chats').set(chats);
+        db.ref('privateMessages').set(privateMessages);
+        if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
 
     function toggleAuthMode(mode) {
         if (mode === 'register') {
@@ -252,8 +298,8 @@
         if (!u) return alert('Vui lòng nhập tên đăng nhập!');
 
         let found = users.find(x => x.name.toLowerCase() === u.toLowerCase());
-        if (!found) return alert('Tài khoản không tồn tại! Hãy đăng ký tài khoản mới.');
-        if (found.banned) return alert('Tài khoản của bạn đã bị khóa (Ban)!');
+        if (!found) return alert('Tài khoản không tồn tại!');
+        if (found.banned) return alert('Tài khoản của bạn đã bị khóa!');
         if (found.pass !== p) return alert('Mật khẩu không chính xác!');
 
         currentUser = found;
@@ -269,9 +315,6 @@
 
         updateUserUI();
         switchTab('feed');
-        renderPosts();
-        renderChats();
-        renderAdminPanel();
     }
 
     function logout() {
@@ -288,6 +331,7 @@
     }
 
     function updateUserUI() {
+        if (!currentUser) return;
         let roleBadge = '';
         if (currentUser.role === 'admin') roleBadge = ' <span class="badge badge-admin">ADMIN</span>';
         if (currentUser.role === 'teacher') roleBadge = ' <span class="badge badge-teacher">GIÁO VIÊN</span>';
@@ -320,7 +364,6 @@
         if (tabId === 'messages') renderDirectUserList();
     }
 
-    // ĐỔI HỌ VÀ TÊN - CỐT LÕI
     function changeName() {
         const newN = document.getElementById('newNameInput').value.trim();
         if (!newN) return alert('Vui lòng nhập tên mới!');
@@ -332,12 +375,10 @@
 
         const oldN = currentUser.name;
 
-        // Cập nhật users
         let uIndex = users.findIndex(x => x.name.toLowerCase() === oldN.toLowerCase());
         if (uIndex !== -1) users[uIndex].name = newN;
         currentUser.name = newN;
 
-        // Cập nhật Posts
         posts.forEach(p => {
             if (p.author.toLowerCase() === oldN.toLowerCase()) p.author = newN;
             p.likes = p.likes.map(l => l.toLowerCase() === oldN.toLowerCase() ? newN : l);
@@ -347,12 +388,10 @@
             });
         });
 
-        // Cập nhật Chats
         chats.forEach(c => {
             if (c.author.toLowerCase() === oldN.toLowerCase()) c.author = newN;
         });
 
-        // Cập nhật Messages
         privateMessages.forEach(m => {
             if (m.from.toLowerCase() === oldN.toLowerCase()) m.from = newN;
             if (m.to.toLowerCase() === oldN.toLowerCase()) m.to = newN;
@@ -360,14 +399,13 @@
 
         saveData();
         updateUserUI();
-        renderPosts();
-        alert('Đổi tên thành công!');
+        alert('Đổi tên thành công trên toàn hệ thống!');
         document.getElementById('newNameInput').value = '';
     }
 
     function updateAvatar() {
         const fileInput = document.getElementById('newAvatarFile');
-        if (!fileInput.files || !fileInput.files[0]) return alert('Vui lòng chọn file ảnh đại diện!');
+        if (!fileInput.files || !fileInput.files[0]) return alert('Vui lòng chọn file ảnh!');
 
         const reader = new FileReader();
         reader.onload = function(e) {
@@ -384,7 +422,7 @@
     function changePassword() {
         const oldP = document.getElementById('oldPass').value;
         const newP = document.getElementById('newPass').value;
-        if (!oldP || !newP) return alert('Vui lòng điền đủ mật khẩu cũ và mới!');
+        if (!oldP || !newP) return alert('Vui lòng điền đủ mật khẩu!');
         if (currentUser.pass !== oldP) return alert('Mật khẩu cũ không chính xác!');
 
         currentUser.pass = newP;
@@ -417,14 +455,12 @@
     function toggleBan(index) {
         users[index].banned = !users[index].banned;
         saveData();
-        renderAdminPanel();
     }
 
     function deleteUser(index) {
         if(confirm("Bạn có chắc chắn muốn xóa tài khoản này?")) {
             users.splice(index, 1);
             saveData();
-            renderAdminPanel();
         }
     }
 
@@ -432,7 +468,7 @@
         const title = document.getElementById('postTitle').value.trim();
         const content = document.getElementById('postContent').value.trim();
         const fileInput = document.getElementById('postImage');
-        if (!title || !content) return alert('Vui lòng nhập tiêu đề và mô tả tranh!');
+        if (!title || !content) return alert('Vui lòng nhập tiêu đề và mô tả!');
 
         if (fileInput.files && fileInput.files[0]) {
             const reader = new FileReader();
@@ -456,7 +492,6 @@
             comments: []
         });
         saveData();
-        renderPosts();
         document.getElementById('postTitle').value = '';
         document.getElementById('postContent').value = '';
         document.getElementById('postImage').value = '';
@@ -476,8 +511,6 @@
             updateAuthorHearts(p.author, 1);
         }
         saveData();
-        renderPosts();
-        if(currentUser.name.toLowerCase() === p.author.toLowerCase()) updateUserUI();
     }
 
     function toggleDislike(postId) {
@@ -495,8 +528,6 @@
             p.dislikes.push(uName);
         }
         saveData();
-        renderPosts();
-        if(currentUser.name.toLowerCase() === p.author.toLowerCase()) updateUserUI();
     }
 
     function updateAuthorHearts(authorName, change) {
@@ -509,8 +540,8 @@
         if (posts.length === 0) { div.innerHTML = 'Chưa có tác phẩm nào.'; return; }
 
         div.innerHTML = posts.map((p) => {
-            let hasLiked = p.likes.some(l => l.toLowerCase() === currentUser.name.toLowerCase());
-            let hasDisliked = p.dislikes.some(d => d.toLowerCase() === currentUser.name.toLowerCase());
+            let hasLiked = p.likes.some(l => l.toLowerCase() === currentUser?.name?.toLowerCase());
+            let hasDisliked = p.dislikes.some(d => d.toLowerCase() === currentUser?.name?.toLowerCase());
             return `
             <div class="post">
                 <h4>${p.title} <small style="color:gray">bởi ${p.author}</small></h4>
@@ -530,7 +561,7 @@
                     <b>💯 Điểm số: ${p.score}/10</b> | <b>Đánh giá của Cô:</b> ${p.review}
                 </div>` : ''}
 
-                ${currentUser.role === 'teacher' ? `
+                ${currentUser?.role === 'teacher' ? `
                     <div style="background:#F3F4F6; padding:8px; border-radius:6px; margin:5px 0;">
                         <input type="number" id="score-${p.id}" placeholder="Điểm (1-10)..." min="1" max="10" style="width:100px; display:inline-block;">
                         <input type="text" id="review-${p.id}" placeholder="Nhận xét của cô..." style="width:220px; display:inline-block;">
@@ -538,16 +569,16 @@
                     </div>
                 ` : ''}
 
-                ${currentUser.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deletePost(${p.id})" style="margin-top:5px;">Xóa Bài Viết</button>` : ''}
+                ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deletePost(${p.id})" style="margin-top:5px;">Xóa Bài Viết</button>` : ''}
 
                 <div style="margin-top:10px;">
                     <h5>Bình luận & Đánh giá:</h5>
                     ${p.comments.map((c, ci) => `
                         <div class="${c.pinned ? 'comment-pinned' : ''}" style="margin-bottom:4px; padding:4px;">
-                            ${c.pinned ? '📌 <b>[Được ghim]</b> ' : ''}<b>${c.author}:</b> ${c.text}${(currentUser.role === 'admin' || currentUser.role === 'teacher') ? `
+                            ${c.pinned ? '📌 <b>[Được ghim]</b> ' : ''}<b>${c.author}:</b> ${c.text}${(currentUser?.role === 'admin' || currentUser?.role === 'teacher') ? `
                                 <button class="btn-sm btn-warning" onclick="togglePinComment(${p.id}, ${ci})">${c.pinned ? 'Bỏ ghim' : 'Ghim'}</button>
                             ` : ''}
-                            ${currentUser.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteComment(${p.id}, ${ci})">Xóa</button>` : ''}
+                            ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteComment(${p.id}, ${ci})">Xóa</button>` : ''}
                         </div>
                     `).join('')}
                     <div style="display:flex; gap:5px; margin-top:5px;">
@@ -568,14 +599,12 @@
         p.score = score;
         p.review = review;
         saveData();
-        renderPosts();
     }
 
     function deletePost(postId) {
         if(confirm("Bạn muốn xóa bài viết này?")) {
             posts = posts.filter(x => x.id !== postId);
             saveData();
-            renderPosts();
         }
     }
 
@@ -586,14 +615,12 @@
 
         p.comments.push({ author: currentUser.name, text: txt, pinned: false });
         saveData();
-        renderPosts();
     }
 
     function deleteComment(postId, commentIndex) {
         let p = posts.find(x => x.id === postId);
         p.comments.splice(commentIndex, 1);
         saveData();
-        renderPosts();
     }
 
     function togglePinComment(postId, commentIndex) {
@@ -602,7 +629,6 @@
         cmt.pinned = !cmt.pinned;
         p.comments.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
         saveData();
-        renderPosts();
     }
 
     function renderTop7() {
@@ -631,6 +657,7 @@
 
     function renderDirectUserList() {
         const div = document.getElementById('directUserList');
+        if (!currentUser) return;
         div.innerHTML = users.filter(u => u.name.toLowerCase() !== currentUser.name.toLowerCase()).map(u => `
             <div onclick="selectChatUser('${u.name}')" style="padding: 8px; margin-bottom: 5px; background: rgba(0,0,0,0.03); border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                 <img src="${u.avatar || 'https://via.placeholder.com/30'}" class="avatar-sm" style="width:30px; height:30px;" alt="">
@@ -658,13 +685,12 @@
             time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
         });
         saveData();
-        renderPrivateMessages();
         input.value = '';
     }
 
     function renderPrivateMessages() {
         const box = document.getElementById('privateChatBox');
-        if (!chattingWithUser) return;
+        if (!chattingWithUser || !currentUser) return;
 
         let filtered = privateMessages.filter(m => 
             (m.from.toLowerCase() === currentUser.name.toLowerCase() && m.to.toLowerCase() === chattingWithUser.toLowerCase()) ||
@@ -688,7 +714,6 @@
 
         chats.push({ author: currentUser.name, text: msg, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
         saveData();
-        renderChats();
         document.getElementById('chatMsg').value = '';
     }
 
@@ -700,14 +725,6 @@
 
     function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
-    }
-
-    function saveData() {
-        localStorage.setItem('posts', JSON.stringify(posts));
-        localStorage.setItem('chats', JSON.stringify(chats));
-        localStorage.setItem('privateMessages', JSON.stringify(privateMessages));
-        localStorage.setItem('users', JSON.stringify(users));
-        if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser));
     }
 </script>
 </body>

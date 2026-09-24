@@ -34,7 +34,7 @@
         .nav-tabs button { flex: 1; min-width: 120px; background: #E5E7EB; color: #374151; padding: 10px; }
         .nav-tabs button.active { background: var(--primary); color: white; }
         
-        .post { border-bottom: 1px solid #E5E7EB; padding-bottom: 15px; margin-bottom: 15px; }
+        .post { border-bottom: 1px solid #E5E7EB; padding-bottom: 15px; margin-bottom: 20px; }
         .post img { max-width: 100%; border-radius: 8px; margin-top: 10px; max-height: 450px; object-fit: contain; display: block; }
         .chat-box { height: 250px; overflow-y: auto; border: 1px solid #DDD; padding: 10px; border-radius: 6px; background: rgba(0,0,0,0.02); margin-bottom: 10px; }
         .avatar-sm { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
@@ -43,7 +43,7 @@
         .auth-container { max-width: 400px; margin: 40px auto; text-align: center; }
         .toggle-link { color: var(--primary); cursor: pointer; text-decoration: underline; font-size: 14px; display: inline-block; margin-top: 15px; }
 
-        /* Giao diện Switch (Bật/Tắt) */
+        /* Switch Bật/Tắt */
         .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
@@ -51,9 +51,12 @@
         input:checked + .slider { background-color: #059669; }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Giao diện Modal */
+        /* Modal Overlay */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-card { background: var(--card); padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 15px rgba(0,0,0,0.2); position: relative;}
+        .modal-card { background: var(--card); padding: 20px; border-radius: 12px; width: 90%; max-width: 380px; text-align: center; box-shadow: 0 10px 15px rgba(0,0,0,0.2); position: relative;}
+        
+        .comment-section { background: rgba(128,128,128,0.08); padding: 10px; border-radius: 8px; margin-top: 10px; }
+        .comment-item { border-bottom: 1px solid rgba(128,128,128,0.2); padding: 5px 0; font-size: 13px; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
@@ -81,7 +84,8 @@
 <div id="announcementModal" class="modal-overlay hidden">
     <div class="modal-card" style="border: 4px solid var(--primary);">
         <h2 style="color: var(--primary); margin-top:0;">📢 THÔNG BÁO TỪ ADMIN</h2>
-        <p id="announcementText" style="font-size: 16px; font-weight: bold; padding: 15px; background: rgba(128,128,128,0.1); border-radius: 8px; line-height: 1.5; color: var(--text);"></p>
+        <p id="announcementTargetText" style="font-size:12px; color:gray; margin-bottom:5px;"></p>
+        <p id="announcementText" style="font-size: 15px; font-weight: bold; padding: 15px; background: rgba(128,128,128,0.1); border-radius: 8px; line-height: 1.5; color: var(--text); margin:0;"></p>
         <button onclick="closeAnnouncement()" style="margin-top: 15px; width: 100%; font-size: 16px; padding: 12px;">Đã hiểu</button>
     </div>
 </div>
@@ -104,7 +108,7 @@
     <div id="authSection" class="card auth-container">
         <div id="loginForm">
             <h3>🔑 Đăng Nhập</h3>
-            <input type="text" id="loginUser" inputmode="text" autocomplete="off" placeholder="Tên đăng nhập (vd: admin, giáo viên)..." onkeydown="if(event.key==='Enter') login()">
+            <input type="text" id="loginUser" autocomplete="off" placeholder="Tên đăng nhập (vd: admin, giáo viên)..." onkeydown="if(event.key==='Enter') login()">
             <input type="password" id="loginPass" autocomplete="off" placeholder="Mật khẩu..." onkeydown="if(event.key==='Enter') login()">
             <button onclick="login()">Đăng Nhập</button>
             <span class="toggle-link" onclick="toggleAuthMode('register')">Chưa có tài khoản? Hãy đăng ký ngay!</span>
@@ -112,9 +116,9 @@
 
         <div id="registerForm" class="hidden">
             <h3>📝 Đăng Ký Tài Khoản Học Sinh</h3>
-            <input type="text" id="regUsername" inputmode="text" autocomplete="off" placeholder="Tên đăng nhập (Viết liền, không đổi được)">
-            <input type="text" id="regFullName" inputmode="text" autocomplete="off" placeholder="Họ và Tên thật của bạn">
-            <input type="text" id="regDisplayName" inputmode="text" autocomplete="off" placeholder="Tên hiển thị (Tên gọi trên web)">
+            <input type="text" id="regUsername" autocomplete="off" placeholder="Tên đăng nhập (Viết liền, không đổi được)">
+            <input type="text" id="regFullName" autocomplete="off" placeholder="Họ và Tên thật của bạn">
+            <input type="text" id="regDisplayName" autocomplete="off" placeholder="Tên hiển thị (Tên gọi trên web)">
             <select id="regClass">
                 <option value="" disabled selected>-- Chọn lớp của bạn --</option>
                 <option value="6A1">6A1</option><option value="6A2">6A2</option><option value="6A3">6A3</option>
@@ -136,16 +140,15 @@
             <button id="btn-messages" onclick="switchTab('messages')">👥 Bạn Bè & Nhắn Tin</button>
             <button id="btn-chat" onclick="switchTab('chat')">🌐 Chat Chung</button>
             <button id="btn-profile" onclick="switchTab('profile')">👤 Hồ Sơ</button>
-            <!-- Tab Quản Trị chỉ hiển thị cho admin -->
             <button id="btn-admin" onclick="switchTab('admin')" class="hidden" style="background:#DC2626; color:white;">⚙️ Quản Trị</button>
         </div>
 
-        <!-- TAB QUẢN TRỊ VIÊN (CHỈ ADMIN THẤY) -->
+        <!-- TAB QUẢN TRỊ VIÊN -->
         <div id="tab-admin" class="hidden">
             <div class="card" style="border: 2px solid #DC2626;">
                 <h3 style="color: #DC2626; margin-top: 0;">⚙️ Bảng Điều Khiển Của Admin</h3>
                 
-                <!-- Bật/Tắt Các Tính Năng -->
+                <!-- Bật/Tắt Cấu Hình -->
                 <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
                     <div style="flex: 1; background: rgba(220, 38, 38, 0.1); padding: 10px; border-radius: 8px;">
                         <strong>🏆 Bảng Xếp Hạng:</strong> 
@@ -166,18 +169,21 @@
                     </div>
                 </div>
 
-                <!-- Gửi Thông Báo Toàn Trang -->
+                <!-- Gửi Thông Báo Linh Hoạt (Toàn server hoặc 1 người) -->
                 <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3B82F6;">
-                    <h4 style="margin-top: 0; color: #1D4ED8;">📢 Gửi Thông Báo (Pop-up) Toàn Hệ Thống</h4>
-                    <textarea id="adminAnnouncementInput" rows="2" placeholder="Nhập nội dung thông báo sẽ hiển thị khi người dùng vào web..."></textarea>
+                    <h4 style="margin-top: 0; color: #1D4ED8;">📢 Gửi Thông Báo Hệ Thống</h4>
+                    
+                    <label style="font-size: 13px; font-weight: bold;">Gửi tới đối tượng nào?</label>
+                    <select id="announcementTargetSelect" style="margin-bottom: 8px;">
+                        <option value="ALL">🌐 Tất cả người dùng (Toàn Server)</option>
+                    </select>
+
+                    <textarea id="adminAnnouncementInput" rows="2" placeholder="Nhập nội dung thông báo..."></textarea>
+                    
                     <div style="margin-top: 5px;">
                         <button class="btn-success btn-sm" onclick="sendAnnouncement()">Phát Thông Báo</button>
-                        <button class="btn-danger btn-sm" onclick="clearAnnouncement()">Xóa Thông Báo</button>
+                        <button class="btn-danger btn-sm" onclick="clearAnnouncement()">Xóa Thông Báo Của Đối Tượng Đã Chọn</button>
                     </div>
-                </div>
-
-                <h4>🚨 Danh Sách Báo Cáo (Reports)</h4>
-                <div id="adminReportsList" style="max-height: 200px; overflow-y: auto; background: rgba(128,128,128,0.1); padding: 10px; border-radius: 6px; margin-bottom: 15px;">
                 </div>
 
                 <h4>👥 Quản Lý Phân Quyền & Người Dùng</h4>
@@ -259,7 +265,6 @@
                     </div>
                 </div>
 
-                <!-- CHỈ ADMIN HOẶC GIÁO VIÊN MỚI THẤY KHU VỰC NÀY -->
                 <div id="nameChangeSection" style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px; border: 1px solid #10B981; margin-bottom: 20px;">
                     <h4 style="margin-top: 0; color: #047857;">✏️ Đổi Tên Hiển Thị (Quyền GV/Admin)</h4>
                     <input type="text" id="newNameInput" placeholder="Nhập Tên mới...">
@@ -297,11 +302,13 @@
     const db = firebase.database();
 
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-    let posts = [], chats = [], privateMessages = [], users = [], reports = [];
+    let posts = [], chats = [], privateMessages = [], users = [];
     let chattingWithUser = null, viewingUser = null;
-    let isLeaderboardActive = true, isChatLocked = false, globalAnnouncement = "";
+    let isLeaderboardActive = true, isChatLocked = false;
+    let announcementsData = {};
+    let currentTab = 'feed';
 
-    // LẮNG NGHE DỮ LIỆU TỪ FIREBASE
+    // LẮNG NGHE FIREBASE
     db.ref('users').on('value', snapshot => {
         let data = snapshot.val();
         let raw = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
@@ -316,24 +323,25 @@
             ];
             db.ref('users').set(users);
         }
+        
         if (currentUser) {
             let fresh = users.find(u => u.username === currentUser.username);
             if (!fresh || fresh.banned) return logout();
             currentUser = fresh;
             updateUserUI();
         }
-        renderAdminPanel(); renderDirectUserList();
+        renderAdminPanel(); renderDirectUserList(); updateAnnouncementTargetDropdown();
     });
 
     db.ref('posts').on('value', snapshot => {
         let data = snapshot.val();
         let raw = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
         posts = raw.filter(p => p).map(p => ({
-            ...p, likes: Array.isArray(p.likes) ? p.likes : (p.likes ? Object.values(p.likes) : []),
-            dislikes: Array.isArray(p.dislikes) ? p.dislikes : (p.dislikes ? Object.values(p.dislikes) : []),
+            ...p, 
+            likes: Array.isArray(p.likes) ? p.likes : (p.likes ? Object.values(p.likes) : []),
             comments: Array.isArray(p.comments) ? p.comments : (p.comments ? Object.values(p.comments) : [])
         }));
-        renderPosts(); if (!document.getElementById('tab-top7').classList.contains('hidden')) renderTop7();
+        renderPosts(); if (currentTab === 'top7') renderTop7();
     });
 
     db.ref('chats').on('value', snapshot => {
@@ -348,7 +356,6 @@
         renderPrivateMessages();
     });
 
-    // Lắng nghe cài đặt Admin
     db.ref('settings/leaderboardActive').on('value', snapshot => {
         isLeaderboardActive = snapshot.val() === null ? true : snapshot.val();
         let toggle = document.getElementById('adminToggleLeaderboard');
@@ -358,7 +365,7 @@
 
         if (currentUser && currentUser.role !== 'admin') {
             document.getElementById('btn-top7').style.display = isLeaderboardActive ? "inline-block" : "none";
-            if(!isLeaderboardActive && document.getElementById('btn-top7').classList.contains('active')) switchTab('feed');
+            if(!isLeaderboardActive && currentTab === 'top7') switchTab('feed');
         }
     });
 
@@ -371,19 +378,13 @@
         updateChatUI();
     });
 
-    db.ref('settings/announcement').on('value', snapshot => {
-        globalAnnouncement = snapshot.val() || "";
+    db.ref('announcements').on('value', snapshot => {
+        announcementsData = snapshot.val() || {};
         checkAndShowAnnouncement();
     });
 
-    db.ref('reports').on('value', snapshot => {
-        let data = snapshot.val();
-        reports = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
-        renderReportsList();
-    });
-
     window.onload = function() { if (currentUser) showMainContent(); };
-    
+
     function saveData() {
         db.ref('users').set(users);
         db.ref('posts').set(posts);
@@ -407,7 +408,6 @@
 
         if (!username || !fullName || !displayName || !className || !pass) return alert('Vui lòng điền đầy đủ thông tin!');
         if (users.find(x => x && x.username === username)) return alert('Tên đăng nhập đã tồn tại!');
-        if (users.find(x => x && x.name.toLowerCase() === displayName.toLowerCase())) return alert('Tên hiển thị đã có người dùng!');
         
         users.push({ username, name: displayName, fullName, class: className, pass, role: 'student', banned: false, avatar: '', hearts: 0, followers: [] });
         saveData(); alert('Đăng ký thành công! Hãy đăng nhập.'); toggleAuthMode('login');
@@ -420,7 +420,7 @@
 
         let found = users.find(x => x && x.username === u);
         if (!found) return alert('Sai tên đăng nhập!');
-        if (found.banned) return alert('Tài khoản bị khóa!');
+        if (found.banned) return alert('Tài khoản đã bị Admin khóa!');
         if (found.pass !== p) return alert('Sai mật khẩu!');
 
         currentUser = found;
@@ -466,6 +466,7 @@
     }
 
     function switchTab(tabId) {
+        currentTab = tabId;
         ['feed', 'top7', 'messages', 'chat', 'profile', 'admin'].forEach(t => {
             const c = document.getElementById('tab-' + t);
             const b = document.getElementById('btn-' + t);
@@ -477,15 +478,16 @@
         if (tabId === 'top7') renderTop7();
     }
 
-    // ================= TÍNH NĂNG QUẢN TRỊ VIÊN =================
+    // ================= QUẢN TRỊ VIÊN =================
     function renderAdminPanel() {
         if (currentUser?.role !== 'admin') return;
         const div = document.getElementById('userList');
         if (!div) return;
         
         div.innerHTML = users.map(u => {
-            // Không cho Admin tự Khóa / Xóa tài khoản của chính mình
+            let isTargetAdmin = u.role === 'admin';
             let actionButtons = '';
+
             if (u.username !== currentUser.username) {
                 actionButtons = `
                     <select onchange="changeUserRole('${u.username}', this.value)" style="margin:0; padding:4px; width:auto; font-size:12px;">
@@ -494,7 +496,7 @@
                         <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
                     </select>
                     <button class="btn-sm btn-warning" onclick="toggleBan('${u.username}')">${u.banned ? 'Mở Khóa' : 'Khóa'}</button>
-                    ${u.role !== 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteUser('${u.username}')">Xóa</button>` : ''}
+                    ${!isTargetAdmin ? `<button class="btn-sm btn-danger" onclick="deleteUser('${u.username}')">Xóa</button>` : `<span style="font-size:11px; color:gray;">(Tài khoản Admin)</span>`}
                 `;
             } else {
                 actionButtons = `<span style="font-size:12px; color:gray;">(Bạn đang đăng nhập)</span>`;
@@ -516,43 +518,90 @@
 
     function changeUserRole(username, newRole) {
         let u = users.find(x => x.username === username);
-        if (u) { u.role = newRole; if (newRole !== 'student') u.class = ''; saveData(); alert(`Đã cấp quyền ${newRole} cho tài khoản ${username}`); }
+        if (u) { u.role = newRole; if (newRole !== 'student') u.class = ''; saveData(); alert(`Đã cập nhật quyền ${newRole} cho ${username}`); }
     }
 
     function toggleLeaderboard(isActive) { db.ref('settings/leaderboardActive').set(isActive); }
     function toggleChatLock(isLocked) { db.ref('settings/chatLocked').set(isLocked); }
     function toggleBan(username) { let u = users.find(x => x.username === username); if (u) { u.banned = !u.banned; saveData(); } }
-    function deleteUser(username) { if(confirm(`Xóa vĩnh viễn tài khoản ${username}?`)) { users = users.filter(x => x.username !== username); saveData(); } }
+    
+    function deleteUser(username) { 
+        let target = users.find(u => u.username === username);
+        if(target && target.role === 'admin') return alert('Không thể xóa tài khoản Admin!');
+        if(confirm(`Xóa vĩnh viễn tài khoản ${username}?`)) { users = users.filter(x => x.username !== username); saveData(); } 
+    }
+
+    // THÔNG BÁO LINH HOẠT
+    function updateAnnouncementTargetDropdown() {
+        let sel = document.getElementById('announcementTargetSelect');
+        if(!sel) return;
+        let oldVal = sel.value;
+        sel.innerHTML = `<option value="ALL">🌐 Tất cả người dùng (Toàn Server)</option>` + 
+            users.map(u => `<option value="${u.username}">👤 ${u.name} (${u.username})</option>`).join('');
+        sel.value = oldVal || 'ALL';
+    }
 
     function sendAnnouncement() {
+        let target = document.getElementById('announcementTargetSelect').value;
         let txt = document.getElementById('adminAnnouncementInput').value.trim();
         if(!txt) return alert('Vui lòng nhập nội dung thông báo!');
-        db.ref('settings/announcement').set(txt);
-        alert('Đã gửi thông báo thành công!');
+
+        if (target === 'ALL') {
+            db.ref('announcements/global').set({ text: txt, time: Date.now() });
+            alert('Đã gửi thông báo đến TOÀN SERVER!');
+        } else {
+            db.ref(`announcements/users/${target}`).set({ text: txt, time: Date.now() });
+            alert(`Đã gửi thông báo riêng đến tài khoản ${target}!`);
+        }
     }
-    
+
     function clearAnnouncement() {
-        db.ref('settings/announcement').set("");
+        let target = document.getElementById('announcementTargetSelect').value;
+        if (target === 'ALL') {
+            db.ref('announcements/global').remove();
+            alert('Đã xóa thông báo toàn server!');
+        } else {
+            db.ref(`announcements/users/${target}`).remove();
+            alert(`Đã xóa thông báo của tài khoản ${target}!`);
+        }
         document.getElementById('adminAnnouncementInput').value = "";
-        alert('Đã xóa thông báo toàn hệ thống!');
     }
 
     function checkAndShowAnnouncement() {
-        if (currentUser && globalAnnouncement && sessionStorage.getItem('seenAnnouncement') !== globalAnnouncement) {
-            document.getElementById('announcementText').innerText = globalAnnouncement;
-            document.getElementById('announcementModal').classList.remove('hidden');
+        if (!currentUser) return;
+        let msgToShow = null;
+        let targetLabel = "";
+
+        // Ưu tiên kiểm tra thông báo cá nhân trước, sau đó đến toàn server
+        if (announcementsData.users && announcementsData.users[currentUser.username]) {
+            msgToShow = announcementsData.users[currentUser.username].text;
+            targetLabel = "📢 THÔNG BÁO DÀNH RIÊNG CHO BẠN";
+        } else if (announcementsData.global) {
+            msgToShow = announcementsData.global.text;
+            targetLabel = "🌐 THÔNG BÁO TOÀN SERVER";
+        }
+
+        if (msgToShow) {
+            let key = 'seen_' + (announcementsData.users?.[currentUser.username]?.time || announcementsData.global?.time || '0');
+            if (sessionStorage.getItem(key) !== 'true') {
+                document.getElementById('announcementTargetText').innerText = targetLabel;
+                document.getElementById('announcementText').innerText = msgToShow;
+                document.getElementById('announcementModal').classList.remove('hidden');
+                document.getElementById('announcementModal').dataset.key = key;
+            }
         }
     }
     
     function closeAnnouncement() {
-        sessionStorage.setItem('seenAnnouncement', globalAnnouncement);
+        let key = document.getElementById('announcementModal').dataset.key;
+        if (key) sessionStorage.setItem(key, 'true');
         document.getElementById('announcementModal').classList.add('hidden');
     }
 
     // ================= XEM HỒ SƠ & NHẮN TIN =================
     function renderDirectUserList() {
         const div = document.getElementById('directUserList');
-        if (!currentUser) return;
+        if (!currentUser || !div) return;
         div.innerHTML = users.filter(u => u && u.username !== currentUser.username).map(u => {
             let roleStr = u.role === 'teacher' ? '<span style="color:#059669; font-size:12px; font-weight:bold;">Giáo viên</span>' : (u.role === 'admin' ? '<span style="color:red; font-size:12px; font-weight:bold;">Admin</span>' : `<small style="color:gray;">Lớp ${u.class||''}</small>`);
             return `
@@ -621,7 +670,7 @@
 
     function renderPrivateMessages() {
         const box = document.getElementById('privateChatBox');
-        if (!chattingWithUser || !currentUser) return;
+        if (!chattingWithUser || !currentUser || !box) return;
         let filtered = privateMessages.filter(m => (m.from === currentUser.username && m.to === chattingWithUser) || (m.from === chattingWithUser && m.to === currentUser.username));
         box.innerHTML = filtered.map(m => {
             let isMe = m.from === currentUser.username;
@@ -644,7 +693,7 @@
         
         if (isChatLocked && currentUser?.role !== 'admin') {
             input.disabled = true; btn.disabled = true;
-            input.placeholder = "🔒 Admin đã khóa phòng chat này.";
+            input.placeholder = "🔒 Admin đã khóa phòng chat chung.";
         } else {
             input.disabled = false; btn.disabled = false;
             input.placeholder = "Nhập tin nhắn...";
@@ -658,7 +707,7 @@
         chats.push({ 
             id: Date.now() + Math.random(), 
             author: currentUser.name, 
-            username: currentUser.username, // Lưu thêm username để update tên sau này
+            username: currentUser.username,
             text: msg, 
             time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
         });
@@ -668,6 +717,7 @@
 
     function renderChats() {
         const div = document.getElementById('chatBox');
+        if(!div) return;
         div.innerHTML = chats.map(c => `
             <div style="margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
                 <span style="flex:1;"><i>[${c.time}]</i> <b>${c.author}:</b> ${c.text}</span>
@@ -678,7 +728,7 @@
     }
     function deleteGlobalChat(chatId) { chats = chats.filter(c => c.id !== chatId); saveData(); }
 
-    // ================= TRIỂN LÃM =================
+    // ================= TRIỂN LÃM & CHẤM ĐIỂM & BÌNH LUẬN =================
     function createPost() {
         const title = document.getElementById('postTitle').value.trim(); const content = document.getElementById('postContent').value.trim(); const fileInput = document.getElementById('postImage');
         if (!title || !content) return alert('Vui lòng nhập tiêu đề và mô tả!');
@@ -688,8 +738,9 @@
             reader.readAsDataURL(fileInput.files[0]);
         } else { savePostData(title, content, null); }
     }
+    
     function savePostData(title, content, image) {
-        posts.unshift({ id: Date.now(), author: currentUser.name, authorUser: currentUser.username, title, content, image, likes: [], dislikes: [], score: null, review: '', comments: [] });
+        posts.unshift({ id: Date.now(), author: currentUser.name, authorUser: currentUser.username, title, content, image, likes: [], score: null, review: '', comments: [] });
         saveData(); document.getElementById('postTitle').value = ''; document.getElementById('postContent').value = ''; document.getElementById('postImage').value = '';
     }
 
@@ -701,27 +752,124 @@
     }
     function updateAuthorHearts(username, change) { let author = users.find(u => u.username === username); if (author) author.hearts = Math.max(0, (author.hearts || 0) + change); }
 
+    // CHỨC NĂNG CHẤM ĐIỂM DÀNH CHO GV & ADMIN
+    function gradePost(postId) {
+        let p = posts.find(x => x.id === postId); if(!p) return;
+        let scoreInput = document.getElementById(`score-input-${postId}`).value;
+        let reviewInput = document.getElementById(`review-input-${postId}`).value.trim();
+
+        if (scoreInput === '') return alert('Vui lòng nhập số điểm!');
+        let numScore = parseFloat(scoreInput);
+        if (isNaN(numScore) || numScore < 0 || numScore > 10) return alert('Điểm số phải từ 0 đến 10!');
+
+        p.score = numScore;
+        p.review = reviewInput;
+        saveData();
+        alert('Đã lưu điểm và nhận xét thành công!');
+    }
+
+    // CHỨC NĂNG BÌNH LUẬN
+    function addComment(postId) {
+        let input = document.getElementById(`comment-input-${postId}`);
+        let text = input.value.trim();
+        if(!text) return;
+
+        let p = posts.find(x => x.id === postId); if(!p) return;
+        if (!Array.isArray(p.comments)) p.comments = [];
+
+        p.comments.push({
+            id: Date.now() + Math.random(),
+            author: currentUser.name,
+            username: currentUser.username,
+            text: text,
+            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        });
+        saveData();
+        input.value = '';
+    }
+
+    function deleteComment(postId, commentId) {
+        let p = posts.find(x => x.id === postId); if(!p) return;
+        p.comments = p.comments.filter(c => c.id !== commentId);
+        saveData();
+    }
+
     function renderPosts() {
         const div = document.getElementById('postList');
+        if (!div) return;
         if (posts.length === 0) return div.innerHTML = 'Chưa có tác phẩm nào.';
+        
         div.innerHTML = posts.map(p => {
             let hasLiked = (p.likes || []).includes(currentUser?.username);
+            let isTeacherOrAdmin = currentUser?.role === 'teacher' || currentUser?.role === 'admin';
+
+            // HTML Khối điểm & Nhận xét
+            let gradeHTML = '';
+            if (p.score !== null && p.score !== undefined) {
+                gradeHTML = `
+                    <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; padding: 10px; border-radius: 8px; margin-top: 10px;">
+                        <span style="font-weight: bold; color: #047857;">⭐ Điểm số: ${p.score}/10</span>
+                        ${p.review ? `<p style="margin: 5px 0 0 0; font-size: 13px;"><b>📝 Nhận xét GV:</b> ${p.review}</p>` : ''}
+                    </div>
+                `;
+            }
+
+            // HTML Form chấm điểm cho GV & Admin
+            let gradeFormHTML = '';
+            if (isTeacherOrAdmin) {
+                gradeFormHTML = `
+                    <div style="background: rgba(245, 158, 11, 0.1); border: 1px dashed #F59E0B; padding: 10px; border-radius: 8px; margin-top: 10px;">
+                        <h5 style="margin: 0 0 5px 0; color: #D97706;">✏️ Chấm điểm tác phẩm này (Giáo viên / Admin)</h5>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="number" id="score-input-${p.id}" placeholder="Điểm (0-10)" min="0" max="10" step="0.5" value="${p.score !== null && p.score !== undefined ? p.score : ''}" style="width: 100px; margin: 0;">
+                            <input type="text" id="review-input-${p.id}" placeholder="Nhận xét bài..." value="${p.review || ''}" style="flex:1; margin: 0;">
+                            <button onclick="gradePost(${p.id})" class="btn-sm btn-warning" style="margin: 0;">Lưu</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // HTML Danh sách bình luận
+            let commentsListHTML = (p.comments || []).map(c => `
+                <div class="comment-item">
+                    <span><b>${c.author}:</b> ${c.text} <small style="color:gray;">(${c.time})</small></span>
+                    ${(c.username === currentUser?.username || currentUser?.role === 'admin') ? `<button onclick="deleteComment(${p.id},${c.id})" style="background:none; border:none; color:red; cursor:pointer; font-size:11px; padding:0; width:auto;">Xóa</button>` : ''}
+                </div>
+            `).join('');
+
             return `
             <div class="post">
                 <h4>${p.title} <small style="color:gray">bởi <b>${p.author}</b></small></h4>
                 <p>${p.content}</p>
                 ${p.image ? `<img src="${p.image}">` : ''}
+                
+                ${gradeHTML}
+                ${gradeFormHTML}
+
                 <div style="margin-top:10px;">
                     <button class="btn-sm ${hasLiked ? 'btn-success' : 'btn-secondary'}" onclick="toggleLike(${p.id})">👍 Thích (${(p.likes || []).length})</button>
                     ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deletePost(${p.id})">Xóa Bài</button>` : ''}
                 </div>
+
+                <!-- Khu vực bình luận -->
+                <div class="comment-section">
+                    <h5 style="margin: 0 0 5px 0;">💬 Bình luận (${(p.comments || []).length})</h5>
+                    <div>${commentsListHTML || '<p style="font-size:12px; color:gray; margin:0;">Chưa có bình luận nào.</p>'}</div>
+                    
+                    <div style="display: flex; gap: 5px; margin-top: 8px;">
+                        <input type="text" id="comment-input-${p.id}" placeholder="Viết bình luận..." onkeydown="if(event.key==='Enter') addComment(${p.id})" style="margin:0; font-size:12px;">
+                        <button onclick="addComment(${p.id})" class="btn-sm" style="margin:0;">Gửi</button>
+                    </div>
+                </div>
             </div>
         `}).join('');
     }
+
     function deletePost(postId) { if(confirm("Xóa bài viết này?")) { posts = posts.filter(x => x.id !== postId); saveData(); } }
 
     function renderTop7() {
         const div = document.getElementById('top7List');
+        if(!div) return;
         let sorted = [...posts].sort((a, b) => (b.likes || []).length - (a.likes || []).length).slice(0, 7);
         if (sorted.length === 0 || (sorted[0].likes || []).length === 0) return div.innerHTML = 'Chưa có tranh nào được yêu thích.';
         div.innerHTML = sorted.map((p, idx) => `
@@ -729,7 +877,7 @@
                 <h2 style="color: var(--primary); margin: 0;">#${idx + 1}</h2>
                 <div>
                     <h4 style="margin: 0;">${p.title} <small>bởi ${p.author}</small></h4>
-                    <div style="color: #059669; font-weight: bold;">👍 ${(p.likes || []).length} Thích</div>
+                    <div style="color: #059669; font-weight: bold;">👍 ${(p.likes || []).length} Thích ${p.score ? `| ⭐ ${p.score}/10` : ''}</div>
                 </div>
             </div>
         `).join('');
@@ -744,15 +892,8 @@
         let u = users.find(x => x.username === currentUser.username);
         if(u) u.name = newN;
 
-        // Cập nhật tên mới cho toàn bộ bài viết
         posts.forEach(p => { if(p.authorUser === currentUser.username) p.author = newN; });
-        
-        // Cập nhật tên mới cho toàn bộ tin nhắn chat chung
-        chats.forEach(c => { 
-            if(c.username === currentUser.username || (!c.username && c.author === currentUser.name)) {
-                c.author = newN;
-            }
-        });
+        chats.forEach(c => { if(c.username === currentUser.username) c.author = newN; });
 
         saveData(); updateUserUI(); alert('Đổi tên thành công! Toàn bộ bài đăng và tin nhắn cũ đã được cập nhật tên mới.');
     }
@@ -766,12 +907,14 @@
         }
         reader.readAsDataURL(f.files[0]);
     }
+
     function changePassword() {
         const oldP = document.getElementById('oldPass').value; const newP = document.getElementById('newPass').value;
         if (currentUser.pass !== oldP) return alert('Mật khẩu cũ sai!');
         currentUser.pass = newP; let u = users.find(x => x.username === currentUser.username); if(u) u.pass = newP;
         saveData(); alert('Đổi mật khẩu thành công!');
     }
+
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
 </script>
 </body>

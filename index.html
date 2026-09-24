@@ -16,7 +16,7 @@
         .container { max-width: 900px; margin: 0 auto; }
         .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        input[type="text"], input[type="password"], input[type="number"], textarea, select, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: 1px solid #CCC; box-sizing: border-box; font-size: 14px; }
+        input[type="text"], input[type="password"], input[type="number"], textarea, select, button { width: 100%; padding: 10px; margin-top: 8px; border-radius: 6px; border: 1px solid #CCC; box-sizing: border-box; font-size: 14px; background: var(--card); color: var(--text); }
         button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
         button:hover { opacity: 0.9; }
         button:disabled { background: #9CA3AF; cursor: not-allowed; }
@@ -36,7 +36,6 @@
         
         .post { border-bottom: 1px solid #E5E7EB; padding-bottom: 15px; margin-bottom: 15px; }
         .post img { max-width: 100%; border-radius: 8px; margin-top: 10px; max-height: 450px; object-fit: contain; display: block; }
-        .comment-pinned { background: #FEF3C7; border-left: 4px solid #F59E0B; padding: 8px; border-radius: 4px; margin-top: 5px; color: #1F2937; }
         .chat-box { height: 250px; overflow-y: auto; border: 1px solid #DDD; padding: 10px; border-radius: 6px; background: rgba(0,0,0,0.02); margin-bottom: 10px; }
         .avatar-sm { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); }
         .hidden { display: none !important; }
@@ -52,9 +51,9 @@
         input:checked + .slider { background-color: #059669; }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* Giao diện Modal Xem Hồ Sơ */
+        /* Giao diện Modal */
         .modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-card { background: var(--card); padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 15px rgba(0,0,0,0.2); }
+        .modal-card { background: var(--card); padding: 20px; border-radius: 12px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 10px 15px rgba(0,0,0,0.2); position: relative;}
     </style>
 </head>
 <body>
@@ -62,12 +61,12 @@
 <!-- MODAL XEM HỒ SƠ CÔNG KHAI -->
 <div id="publicProfileModal" class="modal-overlay hidden">
     <div class="modal-card">
-        <button onclick="closeProfileModal()" style="float: right; width: auto; background: none; color: gray; margin: 0; padding: 0; font-size: 20px;">✖</button>
+        <button onclick="closeProfileModal()" style="position: absolute; right: 10px; top: 10px; width: auto; background: none; color: var(--text); padding: 0; font-size: 20px;">✖</button>
         <img id="pubAvatar" src="" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin-top: 10px;">
         <h3 id="pubName" style="margin: 10px 0 5px 0;"></h3>
         <p id="pubRoleClass" style="margin: 0; color: gray; font-size: 14px;"></p>
         
-        <div style="background: rgba(0,0,0,0.04); padding: 10px; border-radius: 8px; margin: 15px 0;">
+        <div style="background: rgba(128,128,128,0.1); padding: 10px; border-radius: 8px; margin: 15px 0;">
             <p style="margin: 5px 0;">Họ tên thật: <b id="pubFullName"></b></p>
             <p style="margin: 5px 0;">❤️ <b id="pubHearts"></b> Tym | 🌟 <b id="pubFollowers"></b> Người theo dõi</p>
         </div>
@@ -75,6 +74,15 @@
         <button id="pubBtnFollow" class="btn-success" onclick="executeFollow()" style="margin-bottom: 10px;">❤️ Theo dõi</button>
         <button id="pubBtnChat" class="btn-primary" onclick="startPrivateChat()">💬 Bắt đầu nhắn tin</button>
         <p id="pubChatWarning" style="color: #EF4444; font-size: 12px; margin-top: 5px;">Hai bạn phải <b>Follow chéo nhau</b> mới có thể nhắn tin!</p>
+    </div>
+</div>
+
+<!-- MODAL THÔNG BÁO TỪ ADMIN -->
+<div id="announcementModal" class="modal-overlay hidden">
+    <div class="modal-card" style="border: 4px solid var(--primary);">
+        <h2 style="color: var(--primary); margin-top:0;">📢 THÔNG BÁO TỪ ADMIN</h2>
+        <p id="announcementText" style="font-size: 16px; font-weight: bold; padding: 15px; background: rgba(128,128,128,0.1); border-radius: 8px; line-height: 1.5; color: var(--text);"></p>
+        <button onclick="closeAnnouncement()" style="margin-top: 15px; width: 100%; font-size: 16px; padding: 12px;">Đã hiểu</button>
     </div>
 </div>
 
@@ -137,17 +145,39 @@
             <div class="card" style="border: 2px solid #DC2626;">
                 <h3 style="color: #DC2626; margin-top: 0;">⚙️ Bảng Điều Khiển Của Admin</h3>
                 
-                <div style="background: #FEE2E2; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
-                    <strong>🏆 Ẩn/Hiện Bảng Xếp Hạng:</strong> 
-                    <label class="switch" style="vertical-align: middle; margin: 0 10px;">
-                        <input type="checkbox" id="adminToggleLeaderboard" onchange="toggleLeaderboard(this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                    <span id="leaderboardStatusText" style="font-weight:bold; color:#B91C1C;">Đang Bật</span>
+                <!-- Bật/Tắt Các Tính Năng -->
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
+                    <div style="flex: 1; background: rgba(220, 38, 38, 0.1); padding: 10px; border-radius: 8px;">
+                        <strong>🏆 Bảng Xếp Hạng:</strong> 
+                        <label class="switch" style="vertical-align: middle; margin: 0 5px;">
+                            <input type="checkbox" id="adminToggleLeaderboard" onchange="toggleLeaderboard(this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="leaderboardStatusText" style="font-weight:bold; color:#B91C1C;">Đang Bật</span>
+                    </div>
+
+                    <div style="flex: 1; background: rgba(245, 158, 11, 0.1); padding: 10px; border-radius: 8px;">
+                        <strong>🔒 Khóa Chat Chung:</strong> 
+                        <label class="switch" style="vertical-align: middle; margin: 0 5px;">
+                            <input type="checkbox" id="adminToggleChatLock" onchange="toggleChatLock(this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="chatLockStatusText" style="font-weight:bold; color:#059669;">Đang Mở</span>
+                    </div>
+                </div>
+
+                <!-- Gửi Thông Báo Toàn Trang -->
+                <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3B82F6;">
+                    <h4 style="margin-top: 0; color: #1D4ED8;">📢 Gửi Thông Báo (Pop-up) Toàn Hệ Thống</h4>
+                    <textarea id="adminAnnouncementInput" rows="2" placeholder="Nhập nội dung thông báo sẽ hiển thị khi người dùng vào web..."></textarea>
+                    <div style="margin-top: 5px;">
+                        <button class="btn-success btn-sm" onclick="sendAnnouncement()">Phát Thông Báo</button>
+                        <button class="btn-danger btn-sm" onclick="clearAnnouncement()">Xóa Thông Báo</button>
+                    </div>
                 </div>
 
                 <h4>🚨 Danh Sách Báo Cáo (Reports)</h4>
-                <div id="adminReportsList" style="max-height: 200px; overflow-y: auto; background: #F9FAFB; padding: 10px; border: 1px solid #CCC; border-radius: 6px; margin-bottom: 15px;">
+                <div id="adminReportsList" style="max-height: 200px; overflow-y: auto; background: rgba(128,128,128,0.1); padding: 10px; border-radius: 6px; margin-bottom: 15px;">
                 </div>
 
                 <h4>👥 Quản Lý Phân Quyền & Người Dùng</h4>
@@ -161,7 +191,7 @@
                 <h3>🖼️ Đăng Tác Phẩm Mỹ Thuật</h3>
                 <input type="text" id="postTitle" placeholder="Tiêu đề tác phẩm...">
                 <textarea id="postContent" rows="2" placeholder="Mô tả ý tưởng bức tranh..."></textarea>
-                <input type="file" id="postImage" accept="image/*">
+                <input type="file" id="postImage" accept="image/*" style="background: transparent;">
                 <button onclick="createPost()">Đăng Lên Triển Lãm</button>
             </div>
             
@@ -206,7 +236,7 @@
                 <div id="chatBox" class="chat-box" style="height: 400px;"></div>
                 <div style="display: flex; gap: 5px;">
                     <input type="text" id="chatMsg" placeholder="Nhập tin nhắn..." onkeydown="if(event.key==='Enter') sendChat()" style="margin:0;">
-                    <button onclick="sendChat()" style="margin:0; width:100px;">Gửi</button>
+                    <button id="btnSendChat" onclick="sendChat()" style="margin:0; width:100px;">Gửi</button>
                 </div>
             </div>
         </div>
@@ -219,7 +249,7 @@
                     <img id="profileAvatar" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary);">
                     <h3 id="profileName" style="margin: 10px 0 5px 0;"></h3>
                     
-                    <div style="background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px; text-align: left; margin-bottom: 10px; font-size: 14px;">
+                    <div style="background: rgba(128,128,128,0.1); padding: 10px; border-radius: 8px; text-align: left; margin-bottom: 10px; font-size: 14px;">
                         <p style="margin: 5px 0;"><b>Tên đăng nhập:</b> <span id="profileUsernameText"></span></p>
                         <p style="margin: 5px 0;"><b>Họ tên thật:</b> <span id="profileFullNameText"></span></p>
                         <p style="margin: 5px 0;"><b>Chức vụ/Lớp:</b> <span id="profileRole"></span></p>
@@ -230,14 +260,15 @@
                 </div>
 
                 <!-- CHỈ ADMIN HOẶC GIÁO VIÊN MỚI THẤY KHU VỰC NÀY -->
-                <div id="nameChangeSection" style="background: #ECFDF5; padding: 15px; border-radius: 8px; border: 1px solid #10B981; margin-bottom: 20px;">
+                <div id="nameChangeSection" style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px; border: 1px solid #10B981; margin-bottom: 20px;">
                     <h4 style="margin-top: 0; color: #047857;">✏️ Đổi Tên Hiển Thị (Quyền GV/Admin)</h4>
                     <input type="text" id="newNameInput" placeholder="Nhập Tên mới...">
                     <button onclick="changeName()" class="btn-success">Lưu Tên Mới</button>
+                    <p style="font-size: 12px; color: gray; margin-top: 5px;">Tên mới sẽ tự động cập nhật cho các bài đăng và tin nhắn cũ.</p>
                 </div>
 
                 <h4>🖼️ Đổi Ảnh Đại Diện</h4>
-                <input type="file" id="newAvatarFile" accept="image/*">
+                <input type="file" id="newAvatarFile" accept="image/*" style="background: transparent;">
                 <button onclick="updateAvatar()">Cập Nhật Ảnh</button>
 
                 <h4 style="margin-top: 20px;">🔒 Đổi Mật Khẩu</h4>
@@ -267,20 +298,17 @@
 
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
     let posts = [], chats = [], privateMessages = [], users = [], reports = [];
-    let chattingWithUser = null;
-    let viewingUser = null;
-    let isLeaderboardActive = true;
+    let chattingWithUser = null, viewingUser = null;
+    let isLeaderboardActive = true, isChatLocked = false, globalAnnouncement = "";
 
-    // ĐỒNG BỘ DỮ LIỆU VỚI CHUẨN HÓA MẢNG
+    // LẮNG NGHE DỮ LIỆU TỪ FIREBASE
     db.ref('users').on('value', snapshot => {
         let data = snapshot.val();
         let raw = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
         users = raw.filter(u => u && u.username).map(u => ({
-            ...u,
-            followers: Array.isArray(u.followers) ? u.followers : (u.followers ? Object.values(u.followers) : [])
+            ...u, followers: Array.isArray(u.followers) ? u.followers : (u.followers ? Object.values(u.followers) : [])
         }));
 
-        // KHỞI TẠO TÀI KHOẢN MẶC ĐỊNH CHO ADMIN VÀ GIÁO VIÊN NẾU CHƯA CÓ
         if (users.length === 0) {
             users = [
                 { username: 'admin', name: 'Admin', fullName: 'Quản Trị Viên', class: '', pass: '14121277', role: 'admin', banned: false, avatar: '', hearts: 0, followers: [] },
@@ -288,28 +316,24 @@
             ];
             db.ref('users').set(users);
         }
-
         if (currentUser) {
             let fresh = users.find(u => u.username === currentUser.username);
             if (!fresh || fresh.banned) return logout();
             currentUser = fresh;
             updateUserUI();
         }
-        renderAdminPanel();
-        renderDirectUserList();
+        renderAdminPanel(); renderDirectUserList();
     });
 
     db.ref('posts').on('value', snapshot => {
         let data = snapshot.val();
         let raw = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
         posts = raw.filter(p => p).map(p => ({
-            ...p,
-            likes: Array.isArray(p.likes) ? p.likes : (p.likes ? Object.values(p.likes) : []),
+            ...p, likes: Array.isArray(p.likes) ? p.likes : (p.likes ? Object.values(p.likes) : []),
             dislikes: Array.isArray(p.dislikes) ? p.dislikes : (p.dislikes ? Object.values(p.dislikes) : []),
             comments: Array.isArray(p.comments) ? p.comments : (p.comments ? Object.values(p.comments) : [])
         }));
-        renderPosts();
-        if (!document.getElementById('tab-top7').classList.contains('hidden')) renderTop7();
+        renderPosts(); if (!document.getElementById('tab-top7').classList.contains('hidden')) renderTop7();
     });
 
     db.ref('chats').on('value', snapshot => {
@@ -324,19 +348,32 @@
         renderPrivateMessages();
     });
 
+    // Lắng nghe cài đặt Admin
     db.ref('settings/leaderboardActive').on('value', snapshot => {
-        isLeaderboardActive = snapshot.val();
-        if(isLeaderboardActive === null) isLeaderboardActive = true;
-        
+        isLeaderboardActive = snapshot.val() === null ? true : snapshot.val();
         let toggle = document.getElementById('adminToggleLeaderboard');
         if(toggle) toggle.checked = isLeaderboardActive;
         let st = document.getElementById('leaderboardStatusText');
-        if(st) { st.innerText = isLeaderboardActive ? "Đang Bật" : "Đã Tắt"; st.style.color = isLeaderboardActive ? "#059669" : "#DC2626"; }
+        if(st) { st.innerText = isLeaderboardActive ? "Đang Bật" : "Đã Tắt"; st.style.color = isLeaderboardActive ? "#B91C1C" : "gray"; }
 
         if (currentUser && currentUser.role !== 'admin') {
             document.getElementById('btn-top7').style.display = isLeaderboardActive ? "inline-block" : "none";
             if(!isLeaderboardActive && document.getElementById('btn-top7').classList.contains('active')) switchTab('feed');
         }
+    });
+
+    db.ref('settings/chatLocked').on('value', snapshot => {
+        isChatLocked = snapshot.val() || false;
+        let toggle = document.getElementById('adminToggleChatLock');
+        if(toggle) toggle.checked = isChatLocked;
+        let st = document.getElementById('chatLockStatusText');
+        if(st) { st.innerText = isChatLocked ? "Đã Khóa" : "Đang Mở"; st.style.color = isChatLocked ? "#DC2626" : "#059669"; }
+        updateChatUI();
+    });
+
+    db.ref('settings/announcement').on('value', snapshot => {
+        globalAnnouncement = snapshot.val() || "";
+        checkAndShowAnnouncement();
     });
 
     db.ref('reports').on('value', snapshot => {
@@ -355,12 +392,12 @@
         if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser));
     }
 
+    // AUTH
     function toggleAuthMode(m) {
         document.getElementById('loginForm').classList.toggle('hidden', m==='register');
         document.getElementById('registerForm').classList.toggle('hidden', m==='login');
     }
 
-    // ĐĂNG KÝ
     function register() {
         const username = document.getElementById('regUsername').value.trim().toLowerCase();
         const fullName = document.getElementById('regFullName').value.trim();
@@ -369,24 +406,19 @@
         const pass = document.getElementById('regPass').value.trim();
 
         if (!username || !fullName || !displayName || !className || !pass) return alert('Vui lòng điền đầy đủ thông tin!');
-        if (users.find(x => x && x.username && x.username.toLowerCase() === username)) return alert('Tên đăng nhập đã tồn tại!');
-        if (users.find(x => x && x.name && x.name.toLowerCase() === displayName.toLowerCase())) return alert('Tên hiển thị đã có người dùng!');
+        if (users.find(x => x && x.username === username)) return alert('Tên đăng nhập đã tồn tại!');
+        if (users.find(x => x && x.name.toLowerCase() === displayName.toLowerCase())) return alert('Tên hiển thị đã có người dùng!');
         
         users.push({ username, name: displayName, fullName, class: className, pass, role: 'student', banned: false, avatar: '', hearts: 0, followers: [] });
-        saveData();
-        alert('Đăng ký thành công! Hãy đăng nhập.');
-        toggleAuthMode('login');
+        saveData(); alert('Đăng ký thành công! Hãy đăng nhập.'); toggleAuthMode('login');
     }
 
-    // ĐĂNG NHẬP (ĐÃ KHẮC PHỤC HOÀN TOÀN TÀI KHOẢN ADMIN)
     function login() {
         const u = document.getElementById('loginUser').value.trim().toLowerCase();
         const p = document.getElementById('loginPass').value.trim();
-        
         if (!u || !p) return alert('Vui lòng nhập Tên đăng nhập và Mật khẩu!');
 
-        let found = users.find(x => x && x.username && x.username.toLowerCase() === u);
-        
+        let found = users.find(x => x && x.username === u);
         if (!found) return alert('Sai tên đăng nhập!');
         if (found.banned) return alert('Tài khoản bị khóa!');
         if (found.pass !== p) return alert('Sai mật khẩu!');
@@ -402,8 +434,7 @@
         document.getElementById('btnLogout').classList.remove('hidden');
         document.getElementById('userHeaderInfo').classList.remove('hidden');
 
-        updateUserUI();
-        switchTab('feed');
+        updateUserUI(); updateChatUI(); checkAndShowAnnouncement(); switchTab('feed');
     }
 
     function logout() {
@@ -417,14 +448,11 @@
 
     function updateUserUI() {
         if (!currentUser) return;
-        
         document.getElementById('btn-admin').classList.toggle('hidden', currentUser.role !== 'admin');
         document.getElementById('btn-top7').style.display = (currentUser.role === 'admin' || isLeaderboardActive) ? "inline-block" : "none";
         document.getElementById('nameChangeSection').style.display = (currentUser.role === 'student') ? "none" : "block";
 
-        let roleVN = currentUser.role === 'admin' ? 'Quản trị viên' : (currentUser.role === 'teacher' ? 'Giáo viên' : 'Học sinh ' + (currentUser.class || ''));
         let badge = currentUser.role === 'admin' ? ' <span class="badge badge-admin">ADMIN</span>' : (currentUser.role === 'teacher' ? ' <span class="badge badge-teacher">GIÁO VIÊN</span>' : '');
-
         document.getElementById('userInfoText').innerHTML = `<b>${currentUser.name}</b>${badge}`;
         document.getElementById('headerAvatar').src = currentUser.avatar || 'https://via.placeholder.com/40';
         
@@ -432,7 +460,7 @@
         document.getElementById('profileName').innerText = currentUser.name;
         document.getElementById('profileUsernameText').innerText = currentUser.username;
         document.getElementById('profileFullNameText').innerText = currentUser.fullName;
-        document.getElementById('profileRole').innerText = roleVN;
+        document.getElementById('profileRole').innerText = currentUser.role === 'admin' ? 'Quản trị viên' : (currentUser.role === 'teacher' ? 'Giáo viên' : 'Học sinh ' + (currentUser.class || ''));
         document.getElementById('profileHearts').innerText = currentUser.hearts || 0;
         document.getElementById('profileFollowers').innerText = currentUser.followers ? currentUser.followers.length : 0;
     }
@@ -445,9 +473,7 @@
             if (b) b.classList.remove('active');
         });
         document.getElementById('tab-' + tabId).classList.remove('hidden');
-        const activeBtn = document.getElementById('btn-' + tabId);
-        if(activeBtn) activeBtn.classList.add('active');
-
+        if(document.getElementById('btn-' + tabId)) document.getElementById('btn-' + tabId).classList.add('active');
         if (tabId === 'top7') renderTop7();
     }
 
@@ -456,14 +482,12 @@
         if (currentUser?.role !== 'admin') return;
         const div = document.getElementById('userList');
         if (!div) return;
-        div.innerHTML = users.map(u => `
-            <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center; background:white; padding:8px; border: 1px solid #E5E7EB; border-radius:6px;">
-                <div style="flex: 1;">
-                    <b>${u.name}</b> (${u.username}) <br>
-                    <small>${u.fullName} - ${u.role === 'student' ? 'Lớp '+(u.class||'') : (u.role==='teacher'?'Giáo Viên':'Admin')}</small>
-                    ${u.banned ? '<b style="color:red; font-size:12px;"> [BỊ KHÓA]</b>' : ''}
-                </div>
-                <div style="display: flex; gap: 5px; align-items: center;">
+        
+        div.innerHTML = users.map(u => {
+            // Không cho Admin tự Khóa / Xóa tài khoản của chính mình
+            let actionButtons = '';
+            if (u.username !== currentUser.username) {
+                actionButtons = `
                     <select onchange="changeUserRole('${u.username}', this.value)" style="margin:0; padding:4px; width:auto; font-size:12px;">
                         <option value="student" ${u.role==='student'?'selected':''}>Học sinh</option>
                         <option value="teacher" ${u.role==='teacher'?'selected':''}>Giáo viên</option>
@@ -471,58 +495,68 @@
                     </select>
                     <button class="btn-sm btn-warning" onclick="toggleBan('${u.username}')">${u.banned ? 'Mở Khóa' : 'Khóa'}</button>
                     ${u.role !== 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteUser('${u.username}')">Xóa</button>` : ''}
+                `;
+            } else {
+                actionButtons = `<span style="font-size:12px; color:gray;">(Bạn đang đăng nhập)</span>`;
+            }
+
+            return `
+            <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center; background: var(--card); color: var(--text); padding:8px; border: 1px solid #E5E7EB; border-radius:6px;">
+                <div style="flex: 1;">
+                    <b>${u.name}</b> (${u.username}) <br>
+                    <small>${u.fullName} - ${u.role === 'student' ? 'Lớp '+(u.class||'') : (u.role==='teacher'?'Giáo Viên':'Admin')}</small>
+                    ${u.banned ? '<b style="color:red; font-size:12px;"> [BỊ KHÓA]</b>' : ''}
+                </div>
+                <div style="display: flex; gap: 5px; align-items: center;">
+                    ${actionButtons}
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     function changeUserRole(username, newRole) {
         let u = users.find(x => x.username === username);
-        if (u) {
-            u.role = newRole;
-            if (newRole !== 'student') u.class = '';
-            saveData();
-            alert(`Đã cấp quyền ${newRole} cho tài khoản ${username}`);
-        }
+        if (u) { u.role = newRole; if (newRole !== 'student') u.class = ''; saveData(); alert(`Đã cấp quyền ${newRole} cho tài khoản ${username}`); }
     }
 
     function toggleLeaderboard(isActive) { db.ref('settings/leaderboardActive').set(isActive); }
-    
-    function toggleBan(username) { 
-        let u = users.find(x => x.username === username);
-        if (u) { u.banned = !u.banned; saveData(); }
+    function toggleChatLock(isLocked) { db.ref('settings/chatLocked').set(isLocked); }
+    function toggleBan(username) { let u = users.find(x => x.username === username); if (u) { u.banned = !u.banned; saveData(); } }
+    function deleteUser(username) { if(confirm(`Xóa vĩnh viễn tài khoản ${username}?`)) { users = users.filter(x => x.username !== username); saveData(); } }
+
+    function sendAnnouncement() {
+        let txt = document.getElementById('adminAnnouncementInput').value.trim();
+        if(!txt) return alert('Vui lòng nhập nội dung thông báo!');
+        db.ref('settings/announcement').set(txt);
+        alert('Đã gửi thông báo thành công!');
     }
     
-    function deleteUser(username) { 
-        if(confirm(`Xóa vĩnh viễn tài khoản ${username}?`)) { 
-            users = users.filter(x => x.username !== username); 
-            saveData(); 
-        } 
+    function clearAnnouncement() {
+        db.ref('settings/announcement').set("");
+        document.getElementById('adminAnnouncementInput').value = "";
+        alert('Đã xóa thông báo toàn hệ thống!');
     }
 
-    function renderReportsList() {
-        let div = document.getElementById('adminReportsList');
-        if(!div) return;
-        if (reports.length === 0) return div.innerHTML = "<p style='color:gray;'>Chưa có báo cáo nào.</p>";
-        div.innerHTML = reports.map((r, i) => `
-            <div style="border-bottom:1px solid #ddd; padding-bottom:10px; margin-bottom:10px;">
-                <b style="color:red;">🚨 Tố cáo: ${r.reportedUser}</b><br>
-                <small>Người gửi: ${r.reporter} - Trạng thái: <b>${r.status}</b></small><br>
-                Lý do: <i>${r.reason}</i>
-                ${r.status === 'Chưa xử lý' ? `<br><button class="btn-sm btn-success" style="margin-top:5px;" onclick="resolveReport(${i})">Đánh dấu đã xử lý</button>` : ''}
-            </div>
-        `).join('');
+    function checkAndShowAnnouncement() {
+        if (currentUser && globalAnnouncement && sessionStorage.getItem('seenAnnouncement') !== globalAnnouncement) {
+            document.getElementById('announcementText').innerText = globalAnnouncement;
+            document.getElementById('announcementModal').classList.remove('hidden');
+        }
     }
-    function resolveReport(index) { reports[index].status = 'Đã xử lý ✅'; db.ref('reports').set(reports); }
+    
+    function closeAnnouncement() {
+        sessionStorage.setItem('seenAnnouncement', globalAnnouncement);
+        document.getElementById('announcementModal').classList.add('hidden');
+    }
 
-    // ================= XEM HỒ SƠ & NHẮN TIN (FOLLOW CHÉO) =================
+    // ================= XEM HỒ SƠ & NHẮN TIN =================
     function renderDirectUserList() {
         const div = document.getElementById('directUserList');
         if (!currentUser) return;
         div.innerHTML = users.filter(u => u && u.username !== currentUser.username).map(u => {
             let roleStr = u.role === 'teacher' ? '<span style="color:#059669; font-size:12px; font-weight:bold;">Giáo viên</span>' : (u.role === 'admin' ? '<span style="color:red; font-size:12px; font-weight:bold;">Admin</span>' : `<small style="color:gray;">Lớp ${u.class||''}</small>`);
             return `
-            <div onclick="openProfileModal('${u.username}')" style="cursor: pointer; padding: 10px; margin-bottom: 5px; background: rgba(0,0,0,0.03); border-radius: 6px; display: flex; align-items: center; gap: 10px;">
+            <div onclick="openProfileModal('${u.username}')" style="cursor: pointer; padding: 10px; margin-bottom: 5px; background: rgba(128,128,128,0.1); border-radius: 6px; display: flex; align-items: center; gap: 10px;">
                 <img src="${u.avatar || 'https://via.placeholder.com/40'}" class="avatar-sm">
                 <div style="flex: 1;">
                     <b>${u.name}</b><br>
@@ -554,74 +588,47 @@
         let btnChat = document.getElementById('pubBtnChat');
         let chatWarn = document.getElementById('pubChatWarning');
         
-        if (mutualFollow) {
-            btnChat.disabled = false;
-            chatWarn.style.display = "none";
-        } else {
-            btnChat.disabled = true;
-            chatWarn.style.display = "block";
-        }
+        if (mutualFollow) { btnChat.disabled = false; chatWarn.style.display = "none"; } 
+        else { btnChat.disabled = true; chatWarn.style.display = "block"; }
 
         document.getElementById('publicProfileModal').classList.remove('hidden');
     }
 
-    function closeProfileModal() {
-        document.getElementById('publicProfileModal').classList.add('hidden');
-    }
+    function closeProfileModal() { document.getElementById('publicProfileModal').classList.add('hidden'); }
 
     function executeFollow() {
         if(!viewingUser) return;
         if (!Array.isArray(viewingUser.followers)) viewingUser.followers = [];
-        
         let isFollowing = viewingUser.followers.includes(currentUser.username);
-        if (isFollowing) {
-            viewingUser.followers = viewingUser.followers.filter(f => f !== currentUser.username);
-        } else {
-            viewingUser.followers.push(currentUser.username);
-        }
-        saveData();
-        openProfileModal(viewingUser.username);
+        if (isFollowing) viewingUser.followers = viewingUser.followers.filter(f => f !== currentUser.username);
+        else viewingUser.followers.push(currentUser.username);
+        saveData(); openProfileModal(viewingUser.username);
     }
 
     function startPrivateChat() {
-        closeProfileModal();
-        chattingWithUser = viewingUser.username;
+        closeProfileModal(); chattingWithUser = viewingUser.username;
         document.getElementById('chattingWithTitle').innerText = `💬 Đang nhắn tin với: ${viewingUser.name}`;
         document.getElementById('privateInputArea').classList.remove('hidden');
         renderPrivateMessages();
     }
 
     function sendPrivateMsg() {
-        const input = document.getElementById('privateMsgInput');
-        const text = input.value.trim();
+        const input = document.getElementById('privateMsgInput'); const text = input.value.trim();
         if (!text || !chattingWithUser) return;
-
-        privateMessages.push({
-            id: Date.now() + Math.random(),
-            from: currentUser.username,
-            to: chattingWithUser,
-            text,
-            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-        });
-        saveData();
-        input.value = '';
+        privateMessages.push({ id: Date.now() + Math.random(), from: currentUser.username, to: chattingWithUser, text, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
+        saveData(); input.value = '';
     }
 
     function renderPrivateMessages() {
         const box = document.getElementById('privateChatBox');
         if (!chattingWithUser || !currentUser) return;
-
-        let filtered = privateMessages.filter(m => 
-            (m.from === currentUser.username && m.to === chattingWithUser) ||
-            (m.from === chattingWithUser && m.to === currentUser.username)
-        );
-
+        let filtered = privateMessages.filter(m => (m.from === currentUser.username && m.to === chattingWithUser) || (m.from === chattingWithUser && m.to === currentUser.username));
         box.innerHTML = filtered.map(m => {
             let isMe = m.from === currentUser.username;
             return `
             <div style="margin-bottom: 8px; text-align: ${isMe ? 'right' : 'left'};">
                 <span style="font-size: 11px; color: gray;">[${m.time}]</span>
-                <div style="background: ${isMe ? '#4F46E5' : '#E5E7EB'}; color: ${isMe ? 'white' : 'black'}; padding: 8px 12px; border-radius: 12px; display: inline-block; text-align: left; max-width: 75%; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                <div style="background: ${isMe ? '#4F46E5' : 'rgba(128,128,128,0.2)'}; color: ${isMe ? 'white' : 'var(--text)'}; padding: 8px 12px; border-radius: 12px; display: inline-block; text-align: left; max-width: 75%;">
                     ${m.text}
                 </div>
             </div>
@@ -630,12 +637,28 @@
     }
 
     // ================= PHÒNG CHAT CHUNG =================
+    function updateChatUI() {
+        let input = document.getElementById('chatMsg');
+        let btn = document.getElementById('btnSendChat');
+        if (!input || !btn) return;
+        
+        if (isChatLocked && currentUser?.role !== 'admin') {
+            input.disabled = true; btn.disabled = true;
+            input.placeholder = "🔒 Admin đã khóa phòng chat này.";
+        } else {
+            input.disabled = false; btn.disabled = false;
+            input.placeholder = "Nhập tin nhắn...";
+        }
+    }
+
     function sendChat() {
+        if(isChatLocked && currentUser?.role !== 'admin') return;
         const msg = document.getElementById('chatMsg').value.trim();
         if (!msg) return;
         chats.push({ 
             id: Date.now() + Math.random(), 
             author: currentUser.name, 
+            username: currentUser.username, // Lưu thêm username để update tên sau này
             text: msg, 
             time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
         });
@@ -653,51 +676,30 @@
         `).join('');
         div.scrollTop = div.scrollHeight;
     }
+    function deleteGlobalChat(chatId) { chats = chats.filter(c => c.id !== chatId); saveData(); }
 
-    function deleteGlobalChat(chatId) {
-        chats = chats.filter(c => c.id !== chatId);
-        saveData();
-    }
-
-    // ================= CÁC HÀM CƠ BẢN KHÁC (TRIỂN LÃM, CÁ NHÂN) =================
+    // ================= TRIỂN LÃM =================
     function createPost() {
-        const title = document.getElementById('postTitle').value.trim();
-        const content = document.getElementById('postContent').value.trim();
-        const fileInput = document.getElementById('postImage');
+        const title = document.getElementById('postTitle').value.trim(); const content = document.getElementById('postContent').value.trim(); const fileInput = document.getElementById('postImage');
         if (!title || !content) return alert('Vui lòng nhập tiêu đề và mô tả!');
-
         if (fileInput.files && fileInput.files[0]) {
             const reader = new FileReader();
             reader.onload = function(e) { savePostData(title, content, e.target.result); }
             reader.readAsDataURL(fileInput.files[0]);
         } else { savePostData(title, content, null); }
     }
-
     function savePostData(title, content, image) {
         posts.unshift({ id: Date.now(), author: currentUser.name, authorUser: currentUser.username, title, content, image, likes: [], dislikes: [], score: null, review: '', comments: [] });
-        saveData();
-        document.getElementById('postTitle').value = ''; document.getElementById('postContent').value = ''; document.getElementById('postImage').value = '';
+        saveData(); document.getElementById('postTitle').value = ''; document.getElementById('postContent').value = ''; document.getElementById('postImage').value = '';
     }
 
     function toggleLike(postId) {
-        let p = posts.find(x => x.id === postId);
-        if(!p) return;
-        p.dislikes = (p.dislikes || []).filter(n => n !== currentUser.username);
-        if ((p.likes || []).includes(currentUser.username)) {
-            p.likes = p.likes.filter(n => n !== currentUser.username);
-            updateAuthorHearts(p.authorUser, -1);
-        } else {
-            if(!p.likes) p.likes = [];
-            p.likes.push(currentUser.username);
-            updateAuthorHearts(p.authorUser, 1);
-        }
+        let p = posts.find(x => x.id === postId); if(!p) return;
+        if ((p.likes || []).includes(currentUser.username)) { p.likes = p.likes.filter(n => n !== currentUser.username); updateAuthorHearts(p.authorUser, -1); } 
+        else { if(!p.likes) p.likes = []; p.likes.push(currentUser.username); updateAuthorHearts(p.authorUser, 1); }
         saveData();
     }
-
-    function updateAuthorHearts(username, change) {
-        let author = users.find(u => u.username === username);
-        if (author) author.hearts = Math.max(0, (author.hearts || 0) + change);
-    }
+    function updateAuthorHearts(username, change) { let author = users.find(u => u.username === username); if (author) author.hearts = Math.max(0, (author.hearts || 0) + change); }
 
     function renderPosts() {
         const div = document.getElementById('postList');
@@ -716,7 +718,6 @@
             </div>
         `}).join('');
     }
-
     function deletePost(postId) { if(confirm("Xóa bài viết này?")) { posts = posts.filter(x => x.id !== postId); saveData(); } }
 
     function renderTop7() {
@@ -724,7 +725,7 @@
         let sorted = [...posts].sort((a, b) => (b.likes || []).length - (a.likes || []).length).slice(0, 7);
         if (sorted.length === 0 || (sorted[0].likes || []).length === 0) return div.innerHTML = 'Chưa có tranh nào được yêu thích.';
         div.innerHTML = sorted.map((p, idx) => `
-            <div style="border-bottom: 1px solid #eee; padding: 10px 0; display: flex; gap: 15px;">
+            <div style="border-bottom: 1px solid rgba(128,128,128,0.2); padding: 10px 0; display: flex; gap: 15px;">
                 <h2 style="color: var(--primary); margin: 0;">#${idx + 1}</h2>
                 <div>
                     <h4 style="margin: 0;">${p.title} <small>bởi ${p.author}</small></h4>
@@ -734,38 +735,43 @@
         `).join('');
     }
 
+    // ================= HỒ SƠ =================
     function changeName() {
         const newN = document.getElementById('newNameInput').value.trim();
         if (!newN) return;
+        
         currentUser.name = newN;
         let u = users.find(x => x.username === currentUser.username);
         if(u) u.name = newN;
-        saveData(); updateUserUI(); alert('Đổi tên thành công!');
+
+        // Cập nhật tên mới cho toàn bộ bài viết
+        posts.forEach(p => { if(p.authorUser === currentUser.username) p.author = newN; });
+        
+        // Cập nhật tên mới cho toàn bộ tin nhắn chat chung
+        chats.forEach(c => { 
+            if(c.username === currentUser.username || (!c.username && c.author === currentUser.name)) {
+                c.author = newN;
+            }
+        });
+
+        saveData(); updateUserUI(); alert('Đổi tên thành công! Toàn bộ bài đăng và tin nhắn cũ đã được cập nhật tên mới.');
     }
 
     function updateAvatar() {
-        const f = document.getElementById('newAvatarFile');
-        if (!f.files[0]) return alert('Vui lòng chọn file ảnh!');
+        const f = document.getElementById('newAvatarFile'); if (!f.files[0]) return alert('Vui lòng chọn file ảnh!');
         const reader = new FileReader();
         reader.onload = function(e) {
-            currentUser.avatar = e.target.result;
-            let u = users.find(x => x.username === currentUser.username);
-            if(u) u.avatar = e.target.result;
+            currentUser.avatar = e.target.result; let u = users.find(x => x.username === currentUser.username); if(u) u.avatar = e.target.result;
             saveData(); updateUserUI(); alert('Đổi ảnh thành công!');
         }
         reader.readAsDataURL(f.files[0]);
     }
-
     function changePassword() {
-        const oldP = document.getElementById('oldPass').value;
-        const newP = document.getElementById('newPass').value;
+        const oldP = document.getElementById('oldPass').value; const newP = document.getElementById('newPass').value;
         if (currentUser.pass !== oldP) return alert('Mật khẩu cũ sai!');
-        currentUser.pass = newP;
-        let u = users.find(x => x.username === currentUser.username);
-        if(u) u.pass = newP;
+        currentUser.pass = newP; let u = users.find(x => x.username === currentUser.username); if(u) u.pass = newP;
         saveData(); alert('Đổi mật khẩu thành công!');
     }
-
     function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
 </script>
 </body>

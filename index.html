@@ -519,7 +519,6 @@
 
             if (u.username !== currentUser.username) {
                 if (isAdmin) {
-                    // Admin full quyền
                     actionButtons = `
                         <select onchange="changeUserRole('${u.username}', this.value)" style="margin:0; padding:4px; width:auto; font-size:12px;">
                             <option value="student" ${u.role==='student'?'selected':''}>Học sinh</option>
@@ -531,7 +530,6 @@
                         ${u.role !== 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteUser('${u.username}')">Xóa</button>` : `<span style="font-size:11px; color:gray;">(Tài khoản Admin)</span>`}
                     `;
                 } else if (isOwner) {
-                    // Owner chỉ ban được Học Sinh. Không ban được Admin, Teacher, Owner khác
                     if (u.role === 'student') {
                         actionButtons = `<button class="btn-sm btn-warning" onclick="toggleBan('${u.username}')">${u.banned ? 'Mở Khóa' : 'Khóa'}</button>`;
                     } else {
@@ -706,7 +704,6 @@
         let badge = viewingUser.role==='admin'?' <span class="badge badge-admin">ADMIN</span>':(viewingUser.role==='teacher'?' <span class="badge badge-teacher">GV</span>':(viewingUser.role==='owner'?' <span class="badge badge-owner">OWNER</span>':''));
         document.getElementById('pubName').innerHTML = viewingUser.name + badge;
         
-        // CẬP NHẬT HIỂN THỊ LỚP & CHỨC VỤ TRONG MODAL
         let roleStr = viewingUser.role === 'admin' ? 'QUẢN TRỊ VIÊN' : (viewingUser.role === 'teacher' ? 'GIÁO VIÊN' : (viewingUser.role === 'owner' ? 'OWNER' : 'HỌC SINH'));
         document.getElementById('pubClass').innerText = viewingUser.class ? viewingUser.class.toUpperCase() : 'Không có';
         document.getElementById('pubRole').innerText = roleStr;
@@ -811,7 +808,7 @@
             <div style="margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
                 <span style="flex:1;"><i>[${c.time}]</i> <b>${c.author}:</b> ${c.text}</span>
                 
-                <!-- TUYỆT ĐỐI CHỈ ADMIN MỚI ĐƯỢC XÓA TIN NHẮN CHAT CHUNG -->
+                <!-- CHỈ ADMIN MỚI ĐƯỢC XÓA TIN NHẮN CHAT CHUNG -->
                 ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteGlobalChat(${c.id})" style="padding: 2px 6px; font-size:11px; margin:0;">Xóa</button>` : ''}
             </div>
         `).join('');
@@ -879,10 +876,18 @@
         input.value = '';
     }
 
+    // CHỈ ADMIN HOẶC CHÍNH CHỦ MỚI ĐƯỢC XÓA BÌNH LUẬN (OWNER KHÔNG THỂ XÓA BÌNH LUẬN CỦA NGƯỜI KHÁC)
     function deleteComment(postId, commentId) {
         let p = posts.find(x => x.id === postId); if(!p) return;
-        p.comments = p.comments.filter(c => c.id !== commentId);
-        saveData();
+        let comm = (p.comments || []).find(c => c.id === commentId);
+        if(!comm) return;
+
+        if (comm.username === currentUser?.username || currentUser?.role === 'admin') {
+            p.comments = p.comments.filter(c => c.id !== commentId);
+            saveData();
+        } else {
+            alert('Bạn không có quyền xóa bình luận này!');
+        }
     }
 
     function renderPosts() {
@@ -904,7 +909,6 @@
                 `;
             }
 
-            // CHỈ HIỂN THỊ KHỐI CHẤM ĐIỂM CHO GIÁO VIÊN
             let gradeFormHTML = '';
             if (isTeacher) {
                 gradeFormHTML = `
@@ -919,6 +923,7 @@
                 `;
             }
 
+            // Nút xóa bình luận: Chỉ chính chủ hoặc Admin mới thấy
             let commentsListHTML = (p.comments || []).map(c => `
                 <div class="comment-item">
                     <span><b>${c.author}:</b> ${c.text} <small style="color:gray;">(${c.time})</small></span>
@@ -928,7 +933,7 @@
 
             return `
             <div class="post">
-                <div style="display:flex; justify-style:space-between; align-items:center;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
                     <h4 style="margin:0;">${p.title} <small style="color:gray">bởi <b>${p.author}</b></small></h4>
                     <button class="btn-sm btn-secondary" onclick="reportPost(${p.id})" style="font-size:11px; padding:2px 6px;">🚩 Tố cáo</button>
                 </div>
@@ -940,6 +945,7 @@
 
                 <div style="margin-top:10px;">
                     <button class="btn-sm ${hasLiked ? 'btn-success' : 'btn-secondary'}" onclick="toggleLike(${p.id})">👍 Thích (${(p.likes || []).length})</button>
+                    <!-- CHỈ ADMIN MỚI THẤY NÚT XÓA BÀI ĐĂNG / ẢNH -->
                     ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deletePost(${p.id})">Xóa Bài</button>` : ''}
                 </div>
 
@@ -956,7 +962,30 @@
         `}).join('');
     }
 
-    function deletePost(postId) { if(currentUser.role==='admin' && confirm("Xóa bài viết này?")) { posts = posts.filter(x => x.id !== postId); saveData(); } }
+    // CHỈ ADMIN MỚI CÓ QUYỀN XÓA BÀI VÀ SẼ TỰ ĐỘNG KHẤU TRỪ SỐ TYM ĐÃ CÓ TRONG ẢNH ĐÓ KHỎI HỒ SƠ
+    function deletePost(postId) { 
+        if (currentUser?.role !== 'admin') {
+            return alert('Chỉ Admin mới có quyền xóa bài viết!');
+        }
+
+        if (confirm("Xóa bài viết này? (Số Tym từ ảnh này sẽ bị trừ khỏi hồ sơ người đăng)")) { 
+            let p = posts.find(x => x.id === postId);
+            if (p) {
+                let likeCount = Array.isArray(p.likes) ? p.likes.length : 0;
+                
+                // Khấu trừ số Tym từ ảnh bị xóa khỏi hồ sơ tác giả
+                if (likeCount > 0) {
+                    let author = users.find(u => u.username === p.authorUser);
+                    if (author) {
+                        author.hearts = Math.max(0, (author.hearts || 0) - likeCount);
+                    }
+                }
+                
+                posts = posts.filter(x => x.id !== postId); 
+                saveData(); 
+            }
+        } 
+    }
 
     function renderTop7() {
         const div = document.getElementById('top7List');

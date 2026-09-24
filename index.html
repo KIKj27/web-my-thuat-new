@@ -67,7 +67,7 @@
         <button onclick="closeProfileModal()" style="position: absolute; right: 10px; top: 10px; width: auto; background: none; color: var(--text); padding: 0; font-size: 20px;">✖</button>
         <img id="pubAvatar" src="" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin-top: 10px;">
         <h3 id="pubName" style="margin: 10px 0 5px 0;"></h3>
-        <p id="pubRoleClass" style="margin: 0; color: gray; font-size: 14px;"></p>
+        <p id="pubRoleClass" style="margin: 0; color: gray; font-size: 14px; font-weight: bold;"></p>
         
         <div style="background: rgba(128,128,128,0.1); padding: 10px; border-radius: 8px; margin: 15px 0;">
             <p style="margin: 5px 0;">Họ tên thật: <b id="pubFullName"></b></p>
@@ -169,7 +169,7 @@
                     </div>
                 </div>
 
-                <!-- Gửi Thông Báo Linh Hoạt (Toàn server hoặc 1 người) -->
+                <!-- Gửi Thông Báo Linh Hoạt -->
                 <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3B82F6;">
                     <h4 style="margin-top: 0; color: #1D4ED8;">📢 Gửi Thông Báo Hệ Thống</h4>
                     
@@ -258,7 +258,7 @@
                     <div style="background: rgba(128,128,128,0.1); padding: 10px; border-radius: 8px; text-align: left; margin-bottom: 10px; font-size: 14px;">
                         <p style="margin: 5px 0;"><b>Tên đăng nhập:</b> <span id="profileUsernameText"></span></p>
                         <p style="margin: 5px 0;"><b>Họ tên thật:</b> <span id="profileFullNameText"></span></p>
-                        <p style="margin: 5px 0;"><b>Chức vụ/Lớp:</b> <span id="profileRole"></span></p>
+                        <p style="margin: 5px 0;"><b>Chức vụ/Lớp:</b> <span id="profileRole" style="font-weight: bold; color: var(--primary);"></span></p>
                     </div>
                     <div style="font-size: 16px; font-weight: bold; color: #EF4444;">
                         ❤️ Tym: <span id="profileHearts">0</span> | 🌟 Follower: <span id="profileFollowers">0</span>
@@ -460,7 +460,10 @@
         document.getElementById('profileName').innerText = currentUser.name;
         document.getElementById('profileUsernameText').innerText = currentUser.username;
         document.getElementById('profileFullNameText').innerText = currentUser.fullName;
-        document.getElementById('profileRole').innerText = currentUser.role === 'admin' ? 'Quản trị viên' : (currentUser.role === 'teacher' ? 'Giáo viên' : 'Học sinh ' + (currentUser.class || ''));
+        
+        // HIỂN THỊ CHỨC VỤ KIỂU MỚI (HỌC SINH LỚP X)
+        document.getElementById('profileRole').innerText = currentUser.role === 'admin' ? 'QUẢN TRỊ VIÊN' : (currentUser.role === 'teacher' ? 'GIÁO VIÊN' : 'HỌC SINH LỚP ' + (currentUser.class || '').toUpperCase());
+        
         document.getElementById('profileHearts').innerText = currentUser.hearts || 0;
         document.getElementById('profileFollowers').innerText = currentUser.followers ? currentUser.followers.length : 0;
     }
@@ -506,7 +509,7 @@
             <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center; background: var(--card); color: var(--text); padding:8px; border: 1px solid #E5E7EB; border-radius:6px;">
                 <div style="flex: 1;">
                     <b>${u.name}</b> (${u.username}) <br>
-                    <small>${u.fullName} - ${u.role === 'student' ? 'Lớp '+(u.class||'') : (u.role==='teacher'?'Giáo Viên':'Admin')}</small>
+                    <small>${u.fullName} - <b style="color:var(--primary);">${u.role === 'student' ? 'HỌC SINH LỚP '+ (u.class||'').toUpperCase() : (u.role==='teacher'?'GIÁO VIÊN':'ADMIN')}</b></small>
                     ${u.banned ? '<b style="color:red; font-size:12px;"> [BỊ KHÓA]</b>' : ''}
                 </div>
                 <div style="display: flex; gap: 5px; align-items: center;">
@@ -572,7 +575,6 @@
         let msgToShow = null;
         let targetLabel = "";
 
-        // Ưu tiên kiểm tra thông báo cá nhân trước, sau đó đến toàn server
         if (announcementsData.users && announcementsData.users[currentUser.username]) {
             msgToShow = announcementsData.users[currentUser.username].text;
             targetLabel = "📢 THÔNG BÁO DÀNH RIÊNG CHO BẠN";
@@ -603,7 +605,7 @@
         const div = document.getElementById('directUserList');
         if (!currentUser || !div) return;
         div.innerHTML = users.filter(u => u && u.username !== currentUser.username).map(u => {
-            let roleStr = u.role === 'teacher' ? '<span style="color:#059669; font-size:12px; font-weight:bold;">Giáo viên</span>' : (u.role === 'admin' ? '<span style="color:red; font-size:12px; font-weight:bold;">Admin</span>' : `<small style="color:gray;">Lớp ${u.class||''}</small>`);
+            let roleStr = u.role === 'teacher' ? '<span style="color:#059669; font-size:12px; font-weight:bold;">GIÁO VIÊN</span>' : (u.role === 'admin' ? '<span style="color:red; font-size:12px; font-weight:bold;">ADMIN</span>' : `<small style="color:var(--primary); font-weight:bold;">HỌC SINH LỚP ${(u.class||'').toUpperCase()}</small>`);
             return `
             <div onclick="openProfileModal('${u.username}')" style="cursor: pointer; padding: 10px; margin-bottom: 5px; background: rgba(128,128,128,0.1); border-radius: 6px; display: flex; align-items: center; gap: 10px;">
                 <img src="${u.avatar || 'https://via.placeholder.com/40'}" class="avatar-sm">
@@ -621,7 +623,10 @@
         
         document.getElementById('pubAvatar').src = viewingUser.avatar || 'https://via.placeholder.com/90';
         document.getElementById('pubName').innerHTML = viewingUser.name + (viewingUser.role==='admin'?' <span class="badge badge-admin">ADMIN</span>':(viewingUser.role==='teacher'?' <span class="badge badge-teacher">GV</span>':''));
-        document.getElementById('pubRoleClass').innerText = viewingUser.role === 'student' ? `Học sinh Lớp ${viewingUser.class||''}` : (viewingUser.role === 'teacher' ? 'Giáo viên' : 'Quản trị viên');
+        
+        // ĐỔI HIỂN THỊ CHỨC VỤ Ở ĐÂY
+        document.getElementById('pubRoleClass').innerText = viewingUser.role === 'student' ? `HỌC SINH LỚP ${(viewingUser.class||'').toUpperCase()}` : (viewingUser.role === 'teacher' ? 'GIÁO VIÊN' : 'QUẢN TRỊ VIÊN');
+        
         document.getElementById('pubFullName').innerText = viewingUser.fullName;
         document.getElementById('pubHearts').innerText = viewingUser.hearts || 0;
         document.getElementById('pubFollowers').innerText = (viewingUser.followers || []).length;
@@ -721,6 +726,8 @@
         div.innerHTML = chats.map(c => `
             <div style="margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
                 <span style="flex:1;"><i>[${c.time}]</i> <b>${c.author}:</b> ${c.text}</span>
+                
+                <!-- TUYỆT ĐỐI CHỈ CÓ QUYỀN ADMIN MỚI THẤY NÚT XÓA Ở CHAT CHUNG -->
                 ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteGlobalChat(${c.id})" style="padding: 2px 6px; font-size:11px; margin:0;">Xóa</button>` : ''}
             </div>
         `).join('');
@@ -752,7 +759,6 @@
     }
     function updateAuthorHearts(username, change) { let author = users.find(u => u.username === username); if (author) author.hearts = Math.max(0, (author.hearts || 0) + change); }
 
-    // CHỨC NĂNG CHẤM ĐIỂM DÀNH CHO GV & ADMIN
     function gradePost(postId) {
         let p = posts.find(x => x.id === postId); if(!p) return;
         let scoreInput = document.getElementById(`score-input-${postId}`).value;
@@ -768,7 +774,6 @@
         alert('Đã lưu điểm và nhận xét thành công!');
     }
 
-    // CHỨC NĂNG BÌNH LUẬN
     function addComment(postId) {
         let input = document.getElementById(`comment-input-${postId}`);
         let text = input.value.trim();
@@ -803,7 +808,6 @@
             let hasLiked = (p.likes || []).includes(currentUser?.username);
             let isTeacherOrAdmin = currentUser?.role === 'teacher' || currentUser?.role === 'admin';
 
-            // HTML Khối điểm & Nhận xét
             let gradeHTML = '';
             if (p.score !== null && p.score !== undefined) {
                 gradeHTML = `
@@ -814,7 +818,6 @@
                 `;
             }
 
-            // HTML Form chấm điểm cho GV & Admin
             let gradeFormHTML = '';
             if (isTeacherOrAdmin) {
                 gradeFormHTML = `
@@ -829,7 +832,6 @@
                 `;
             }
 
-            // HTML Danh sách bình luận
             let commentsListHTML = (p.comments || []).map(c => `
                 <div class="comment-item">
                     <span><b>${c.author}:</b> ${c.text} <small style="color:gray;">(${c.time})</small></span>
@@ -851,7 +853,6 @@
                     ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deletePost(${p.id})">Xóa Bài</button>` : ''}
                 </div>
 
-                <!-- Khu vực bình luận -->
                 <div class="comment-section">
                     <h5 style="margin: 0 0 5px 0;">💬 Bình luận (${(p.comments || []).length})</h5>
                     <div>${commentsListHTML || '<p style="font-size:12px; color:gray; margin:0;">Chưa có bình luận nào.</p>'}</div>

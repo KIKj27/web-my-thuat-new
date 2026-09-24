@@ -43,6 +43,14 @@
         .auth-container { max-width: 400px; margin: 40px auto; text-align: center; }
         .toggle-link { color: var(--primary); cursor: pointer; text-decoration: underline; font-size: 14px; display: inline-block; margin-top: 15px; }
         .action-btns { display: flex; gap: 10px; margin-top: 10px; }
+
+        /* Nút Toggle Switch cho Admin */
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #059669; }
+        input:checked + .slider:before { transform: translateX(20px); }
     </style>
 </head>
 <body>
@@ -52,7 +60,7 @@
     <div class="card header">
         <h2>🎨 Triển Lãm Mỹ Thuật <small style="font-size:12px; color:#10B981;">● Online Realtime</small></h2>
         <div style="display: flex; align-items: center; gap: 10px;">
-            <button onclick="toggleDarkMode()" class="btn-sm btn-secondary">🌙 Đổi Giao Diện</button>
+            <button onclick="toggleDarkMode()" class="btn-sm btn-secondary">🌙 Giao Diện</button>
             <div id="userHeaderInfo" class="hidden" style="display: flex; align-items: center; gap: 8px;">
                 <img id="headerAvatar" src="" class="avatar-sm" alt="Avatar">
                 <span id="userInfoText"></span>
@@ -65,7 +73,7 @@
     <div id="authSection" class="card auth-container">
         <div id="loginForm">
             <h3>🔑 Đăng Nhập</h3>
-            <input type="text" id="loginUser" inputmode="text" autocomplete="off" placeholder="Nhập Họ & Tên hoặc tên đăng nhập...">
+            <input type="text" id="loginUser" inputmode="text" autocomplete="off" placeholder="Tên đăng nhập...">
             <input type="password" id="loginPass" autocomplete="off" placeholder="Mật khẩu...">
             <button onclick="login()">Đăng Nhập</button>
             <span class="toggle-link" onclick="toggleAuthMode('register')">Chưa có tài khoản? Hãy đăng ký ngay!</span>
@@ -73,7 +81,16 @@
 
         <div id="registerForm" class="hidden">
             <h3>📝 Đăng Ký Tài Khoản Học Sinh</h3>
-            <input type="text" id="regUser" inputmode="text" autocomplete="off" placeholder="Nhập Họ và Tên của bạn...">
+            <input type="text" id="regUsername" inputmode="text" autocomplete="off" placeholder="Tên đăng nhập (Dùng để đăng nhập, không thể đổi)">
+            <input type="text" id="regFullName" inputmode="text" autocomplete="off" placeholder="Họ và Tên thật của bạn">
+            <input type="text" id="regDisplayName" inputmode="text" autocomplete="off" placeholder="Tên hiển thị (Tên gọi tự do, có thể đổi)">
+            <select id="regClass">
+                <option value="" disabled selected>-- Chọn lớp của bạn --</option>
+                <option value="6A1">6A1</option><option value="6A2">6A2</option><option value="6A3">6A3</option>
+                <option value="7A1">7A1</option><option value="7A2">7A2</option><option value="7A3">7A3</option>
+                <option value="8A1">8A1</option><option value="8A2">8A2</option><option value="8A3">8A3</option>
+                <option value="9A1">9A1</option><option value="9A2">9A2</option><option value="9A3">9A3</option>
+            </select>
             <input type="password" id="regPass" autocomplete="off" placeholder="Tạo mật khẩu mới...">
             <button onclick="register()" class="btn-success">Đăng Ký</button>
             <span class="toggle-link" onclick="toggleAuthMode('login')">Đã có tài khoản? Đăng nhập tại đây.</span>
@@ -85,9 +102,31 @@
         <div class="nav-tabs">
             <button id="btn-feed" onclick="switchTab('feed')" class="active">🖼️ Triển Lãm Tranh</button>
             <button id="btn-top7" onclick="switchTab('top7')">🏆 Top 7 Tranh Đẹp</button>
-            <button id="btn-messages" onclick="switchTab('messages')">💬 Nhắn Tin Riêng</button>
-            <button id="btn-profile" onclick="switchTab('profile')">👤 Hồ Sơ & Đổi Tên/MK</button>
+            <button id="btn-messages" onclick="switchTab('messages')">💬 Giao Lưu & Nhắn Tin</button>
+            <button id="btn-profile" onclick="switchTab('profile')">👤 Hồ Sơ Của Tôi</button>
             <button id="btn-chat" onclick="switchTab('chat')">🌐 Phòng Chat Chung</button>
+        </div>
+
+        <!-- KHU VỰC DÀNH RIÊNG CHO ADMIN -->
+        <div id="adminPanel" class="card hidden" style="border: 2px dashed #DC2626;">
+            <h3 style="color: #DC2626;">⚙️ Khu Vực Quản Trị (Admin)</h3>
+            
+            <div style="background: #FEE2E2; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                <strong>🏆 Trạng thái Bảng Xếp Hạng:</strong> 
+                <label class="switch" style="vertical-align: middle; margin: 0 10px;">
+                    <input type="checkbox" id="adminToggleLeaderboard" onchange="toggleLeaderboard(this.checked)">
+                    <span class="slider"></span>
+                </label>
+                <span id="leaderboardStatusText" style="font-weight:bold; color:#B91C1C;">Đang Bật</span>
+            </div>
+
+            <h4>🚨 Quản Lý Báo Cáo (Reports)</h4>
+            <div id="adminReportsList" style="max-height: 200px; overflow-y: auto; background: white; padding: 10px; border: 1px solid #CCC; border-radius: 6px; margin-bottom: 15px;">
+                <!-- Danh sách report hiện ở đây -->
+            </div>
+
+            <h4>👥 Quản Lý Người Dùng</h4>
+            <div id="userList" style="max-height: 200px; overflow-y: auto;"></div>
         </div>
 
         <!-- TAB 1: TRIỂN LÃM & ĐĂNG BÀI -->
@@ -101,11 +140,6 @@
                 <button onclick="createPost()">Đăng Lên Triển Lãm</button>
             </div>
             
-            <div id="adminPanel" class="card hidden" style="border: 2px dashed #DC2626;">
-                <h3 style="color: #DC2626;">⚙️ Bảng Quản Lý Người Dùng (Admin)</h3>
-                <div id="userList"></div>
-            </div>
-
             <div class="card">
                 <h3>🎨 Các Tác Phẩm Nổi Bật</h3>
                 <div id="postList">Đang tải dữ liệu từ máy chủ...</div>
@@ -121,16 +155,17 @@
             </div>
         </div>
 
-        <!-- TAB 3: NHẮN TIN RIÊNG -->
+        <!-- TAB 3: NHẮN TIN RIÊNG & FOLLOW -->
         <div id="tab-messages" class="hidden">
             <div class="card" style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 220px; border-right: 1px solid #E5E7EB; padding-right: 10px;">
+                <div style="flex: 1; min-width: 250px; border-right: 1px solid #E5E7EB; padding-right: 10px;">
                     <h4>Danh Sách Thành Viên</h4>
-                    <div id="directUserList" style="max-height: 300px; overflow-y: auto;"></div>
+                    <p style="font-size: 12px; color: gray;">Bấm vào tên để chat. Có thể Follow hoặc Báo cáo.</p>
+                    <div id="directUserList" style="max-height: 350px; overflow-y: auto;"></div>
                 </div>
                 <div style="flex: 2; min-width: 280px;">
                     <h4 id="chattingWithTitle">Chọn một người để nhắn tin riêng</h4>
-                    <div id="privateChatBox" class="chat-box" style="height: 250px;"></div>
+                    <div id="privateChatBox" class="chat-box" style="height: 300px;"></div>
                     <div id="privateInputArea" class="hidden">
                         <input type="text" id="privateMsgInput" placeholder="Nhập tin nhắn riêng..." onkeydown="if(event.key==='Enter') sendPrivateMsg()">
                         <button onclick="sendPrivateMsg()" style="margin-top: 5px;">Gửi Tin Nhắn</button>
@@ -139,24 +174,32 @@
             </div>
         </div>
 
-        <!-- TAB 4: HỒ SƠ, ĐỔI TÊN & ĐỔI MẬT KHẨU -->
+        <!-- TAB 4: HỒ SƠ CỦA TÔI -->
         <div id="tab-profile" class="hidden">
             <div class="card" style="max-width: 500px; margin: 0 auto;">
-                <h3>👤 Hồ Sơ Người Dùng</h3>
+                <h3>👤 Hồ Sơ Cá Nhân</h3>
                 <div style="text-align: center; margin-bottom: 15px;">
-                    <img id="profileAvatar" src="" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary);" alt="Avatar">
-                    <h3 id="profileName" style="margin: 5px 0 0 0;"></h3>
-                    <p id="profileRole" style="color: gray; margin: 2px 0;"></p>
-                    <div style="margin-top: 8px; font-size: 16px; font-weight: bold; color: #EF4444;">
-                        ❤️ Tích lũy: <span id="profileHearts">0</span> Tym
+                    <img id="profileAvatar" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary);" alt="Avatar">
+                    <h3 id="profileName" style="margin: 10px 0 5px 0;"></h3>
+                    
+                    <!-- Thông tin cố định -->
+                    <div style="background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px; text-align: left; margin-bottom: 10px; font-size: 14px;">
+                        <p style="margin: 5px 0;"><b>Tên đăng nhập:</b> <span id="profileUsernameText"></span> <i>(Không thể đổi)</i></p>
+                        <p style="margin: 5px 0;"><b>Họ tên thật:</b> <span id="profileFullNameText"></span></p>
+                        <p style="margin: 5px 0;"><b>Lớp:</b> <span id="profileClassText"></span></p>
+                        <p style="margin: 5px 0;"><b>Chức vụ:</b> <span id="profileRole"></span></p>
+                    </div>
+
+                    <div style="font-size: 16px; font-weight: bold; color: #EF4444;">
+                        ❤️ Tym bài viết: <span id="profileHearts">0</span> | 🌟 Người theo dõi: <span id="profileFollowers">0</span>
                     </div>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 15px 0;">
 
                 <div style="background: #ECFDF5; padding: 15px; border-radius: 8px; border: 1px solid #10B981; margin-bottom: 20px;">
-                    <h4 style="margin-top: 0; color: #047857;">✏️ Đổi Họ & Tên Hiển Thị</h4>
-                    <input type="text" id="newNameInput" inputmode="text" autocomplete="off" placeholder="Nhập Họ & Tên mới của bạn...">
+                    <h4 style="margin-top: 0; color: #047857;">✏️ Đổi Tên Hiển Thị (Nickname)</h4>
+                    <input type="text" id="newNameInput" inputmode="text" autocomplete="off" placeholder="Nhập Tên Hiển Thị mới...">
                     <button onclick="changeName()" class="btn-success" style="margin-top: 8px;">Lưu Tên Mới</button>
                 </div>
 
@@ -174,7 +217,7 @@
         <!-- TAB 5: PHÒNG CHAT CHUNG -->
         <div id="tab-chat" class="hidden">
             <div class="card">
-                <h3>🌐 Phòng Chat Chung</h3>
+                <h3>🌐 Phòng Chat Chung (Toàn Trường)</h3>
                 <div id="chatBox" class="chat-box"></div>
                 <input type="text" id="chatMsg" placeholder="Nhập tin nhắn chung..." onkeydown="if(event.key==='Enter') sendChat()">
                 <button onclick="sendChat()">Gửi Tin Nhắn</button>
@@ -184,6 +227,7 @@
 </div>
 
 <script>
+    // --- CẤU HÌNH FIREBASE GIỮ NGUYÊN CỦA BẠN ---
     const firebaseConfig = {
       apiKey: "AIzaSyCxfqAClfQLmVQfJq1S2MUQZuQH4oRwET8",
       authDomain: "webmythuat-157c0.firebaseapp.com",
@@ -198,12 +242,15 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // Biến toàn cục
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
     let posts = [];
     let chats = [];
     let privateMessages = [];
     let users = [];
+    let reports = [];
     let chattingWithUser = null;
+    let isLeaderboardActive = true;
 
     // KẾT NỐI VÀ ĐỒNG BỘ DỮ LIỆU REALTIME
     db.ref('users').on('value', snapshot => {
@@ -211,16 +258,18 @@
         users = rawUsers ? (Array.isArray(rawUsers) ? rawUsers : Object.values(rawUsers)) : [];
 
         if (users.length === 0) {
+            // Khởi tạo Admin và Cô Giáo (Cấu trúc mới)
             users = [
-                { name: 'Admin', pass: '14121277', role: 'admin', banned: false, avatar: '', hearts: 0 },
-                { name: 'Cô Giáo', pass: '77089', role: 'teacher', banned: false, avatar: '', hearts: 0 }
+                { username: 'admin', name: 'Admin', fullName: 'Quản Trị Viên', class: 'GV', pass: '14121277', role: 'admin', banned: false, avatar: '', hearts: 0, followers: [] },
+                { username: 'cogiao', name: 'Cô Giáo', fullName: 'Giáo Viên Mỹ Thuật', class: 'GV', pass: '77089', role: 'teacher', banned: false, avatar: '', hearts: 0, followers: [] }
             ];
             db.ref('users').set(users);
         }
 
-        // KIỂM TRA TỰ ĐỘNG ĐẨY VĂNG RA NẾU BỊ KHÓA HOẶC XÓA (REALTIME KICK)
+        // Cập nhật thông tin User hiện tại nếu đang đăng nhập
         if (currentUser) {
-            let fresh = users.find(u => u.name.toLowerCase() === currentUser.name.toLowerCase());
+            // Tìm theo username (nếu có) hoặc name (để tương thích acc cũ)
+            let fresh = users.find(u => u.username === currentUser.username || u.name === currentUser.name);
             if (!fresh) {
                 alert('Tài khoản của bạn đã bị xóa khỏi hệ thống!');
                 logout();
@@ -261,6 +310,40 @@
         renderPrivateMessages();
     });
 
+    // Lắng nghe cài đặt Bảng xếp hạng từ Admin
+    db.ref('settings/leaderboardActive').on('value', snapshot => {
+        isLeaderboardActive = snapshot.val();
+        if(isLeaderboardActive === null) isLeaderboardActive = true; // Mặc định bật
+
+        // Cập nhật giao diện Switch cho Admin
+        let toggle = document.getElementById('adminToggleLeaderboard');
+        let statusTxt = document.getElementById('leaderboardStatusText');
+        if(toggle) toggle.checked = isLeaderboardActive;
+        if(statusTxt) {
+            statusTxt.innerText = isLeaderboardActive ? "Đang Bật" : "Đã Tắt";
+            statusTxt.style.color = isLeaderboardActive ? "#059669" : "#DC2626";
+        }
+
+        // Ẩn/Hiện Tab Top 7 đối với học sinh
+        let top7Btn = document.getElementById('btn-top7');
+        if (currentUser && currentUser.role !== 'admin') {
+            top7Btn.style.display = isLeaderboardActive ? "inline-block" : "none";
+            // Nếu đang ở tab Top 7 mà admin tắt, đẩy về tab Feed
+            if(!isLeaderboardActive && top7Btn.classList.contains('active')) {
+                switchTab('feed');
+            }
+        } else {
+            top7Btn.style.display = "inline-block"; // Admin luôn thấy
+        }
+    });
+
+    // Lắng nghe danh sách Báo cáo
+    db.ref('reports').on('value', snapshot => {
+        let data = snapshot.val();
+        reports = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+        renderReportsList();
+    });
+
     window.onload = function() {
         if (currentUser) {
             showMainContent();
@@ -285,29 +368,62 @@
         }
     }
 
+    // ĐĂNG KÝ (BẢN NÂNG CẤP)
     function register() {
-        const u = document.getElementById('regUser').value.trim();
-        const p = document.getElementById('regPass').value.trim();
-        if (!u || !p) return alert('Vui lòng nhập đầy đủ tên và mật khẩu!');
-        if (u.toLowerCase() === 'admin' || u.toLowerCase() === 'cô giáo') return alert('Tên này không được phép đăng ký!');
+        const username = document.getElementById('regUsername').value.trim();
+        const fullName = document.getElementById('regFullName').value.trim();
+        const displayName = document.getElementById('regDisplayName').value.trim();
+        const className = document.getElementById('regClass').value;
+        const pass = document.getElementById('regPass').value.trim();
 
-        const exists = users.find(x => x.name.toLowerCase() === u.toLowerCase());
-        if (exists) return alert('Tên này đã được dùng! Vui lòng chọn tên khác.');
+        if (!username || !fullName || !displayName || !className || !pass) {
+            return alert('Vui lòng điền ĐẦY ĐỦ thông tin và chọn Lớp!');
+        }
+        
+        // Kiểm tra xem tên đăng nhập hoặc tên hiển thị có chứa từ cấm không
+        let checkName = displayName.toLowerCase();
+        if (checkName === 'admin' || checkName === 'cô giáo') return alert('Tên hiển thị không hợp lệ!');
 
-        users.push({ name: u, pass: p, role: 'student', banned: false, avatar: '', hearts: 0 });
+        // Kiểm tra trùng Tên đăng nhập
+        const existsUser = users.find(x => x.username && x.username.toLowerCase() === username.toLowerCase());
+        if (existsUser) return alert('Tên đăng nhập này đã có người sử dụng. Vui lòng chọn tên khác!');
+
+        // Kiểm tra trùng Tên hiển thị
+        const existsDisplay = users.find(x => x.name.toLowerCase() === displayName.toLowerCase());
+        if (existsDisplay) return alert('Tên hiển thị này đã được dùng. Hãy chọn tên khác!');
+
+        // Lưu user mới
+        users.push({ 
+            username: username,
+            name: displayName, 
+            fullName: fullName,
+            class: className,
+            pass: pass, 
+            role: 'student', 
+            banned: false, 
+            avatar: '', 
+            hearts: 0,
+            followers: []
+        });
         saveData();
-        alert('Đăng ký thành công! Hãy đăng nhập để tiếp tục.');
-        document.getElementById('regUser').value = '';
+        
+        alert('Đăng ký thành công! Hãy đăng nhập bằng Tên đăng nhập của bạn.');
+        document.getElementById('regUsername').value = '';
+        document.getElementById('regFullName').value = '';
+        document.getElementById('regDisplayName').value = '';
         document.getElementById('regPass').value = '';
         toggleAuthMode('login');
     }
 
+    // ĐĂNG NHẬP (Hỗ trợ cả Tên đăng nhập mới và Tên cũ)
     function login() {
         const u = document.getElementById('loginUser').value.trim();
         const p = document.getElementById('loginPass').value.trim();
         if (!u) return alert('Vui lòng nhập tên đăng nhập!');
 
-        let found = users.find(x => x.name.toLowerCase() === u.toLowerCase());
+        // Tìm kiếm: Ưu tiên tìm theo username, nếu không có tìm theo name (để acc cũ vẫn vào được)
+        let found = users.find(x => (x.username && x.username.toLowerCase() === u.toLowerCase()) || x.name.toLowerCase() === u.toLowerCase());
+        
         if (!found) return alert('Tài khoản không tồn tại!');
         if (found.banned) return alert('Tài khoản của bạn đã bị khóa!');
         if (found.pass !== p) return alert('Mật khẩu không chính xác!');
@@ -325,6 +441,11 @@
 
         updateUserUI();
         switchTab('feed');
+        
+        // Ẩn/hiện Tab Top 7 dựa trên cài đặt admin
+        if (currentUser.role !== 'admin') {
+            document.getElementById('btn-top7').style.display = isLeaderboardActive ? "inline-block" : "none";
+        }
     }
 
     function logout() {
@@ -343,17 +464,26 @@
     function updateUserUI() {
         if (!currentUser) return;
         let roleBadge = '';
-        if (currentUser.role === 'admin') roleBadge = ' <span class="badge badge-admin">ADMIN</span>';
-        if (currentUser.role === 'teacher') roleBadge = ' <span class="badge badge-teacher">GIÁO VIÊN</span>';
+        let roleVN = 'Học sinh';
+        if (currentUser.role === 'admin') { roleBadge = ' <span class="badge badge-admin">ADMIN</span>'; roleVN = 'Quản trị viên'; }
+        if (currentUser.role === 'teacher') { roleBadge = ' <span class="badge badge-teacher">GIÁO VIÊN</span>'; roleVN = 'Giáo viên'; }
         
+        // Header
         document.getElementById('userInfoText').innerHTML = `<b>${currentUser.name}</b>${roleBadge}`;
         let avt = currentUser.avatar || 'https://via.placeholder.com/40';
         document.getElementById('headerAvatar').src = avt;
 
+        // Profile Tab
         document.getElementById('profileAvatar').src = avt;
         document.getElementById('profileName').innerText = currentUser.name;
-        document.getElementById('profileRole').innerText = `Chức vụ: ${currentUser.role.toUpperCase()}`;
+        
+        document.getElementById('profileUsernameText').innerText = currentUser.username || "Chưa cập nhật";
+        document.getElementById('profileFullNameText').innerText = currentUser.fullName || "Chưa cập nhật";
+        document.getElementById('profileClassText').innerText = currentUser.class || "Chưa phân lớp";
+        
+        document.getElementById('profileRole').innerText = roleVN;
         document.getElementById('profileHearts').innerText = currentUser.hearts || 0;
+        document.getElementById('profileFollowers').innerText = currentUser.followers ? currentUser.followers.length : 0;
     }
 
     function switchTab(tabId) {
@@ -374,42 +504,37 @@
         if (tabId === 'messages') renderDirectUserList();
     }
 
+    // ĐỔI TÊN HIỂN THỊ
     function changeName() {
         const newN = document.getElementById('newNameInput').value.trim();
-        if (!newN) return alert('Vui lòng nhập tên mới!');
+        if (!newN) return alert('Vui lòng nhập Tên hiển thị mới!');
         if (newN.toLowerCase() === currentUser.name.toLowerCase()) return alert('Tên mới trùng với tên hiện tại!');
-        if (newN.toLowerCase() === 'admin' || newN.toLowerCase() === 'cô giáo') return alert('Không được dùng tên hệ thống!');
+        if (newN.toLowerCase() === 'admin' || newN.toLowerCase() === 'cô giáo') return alert('Không được dùng tên này!');
 
         const exists = users.find(x => x.name.toLowerCase() === newN.toLowerCase());
-        if (exists) return alert('Tên này đã được người khác sử dụng!');
+        if (exists) return alert('Tên hiển thị này đã được người khác sử dụng!');
 
         const oldN = currentUser.name;
-
-        let uIndex = users.findIndex(x => x.name.toLowerCase() === oldN.toLowerCase());
+        let uIndex = users.findIndex(x => x.name === oldN);
         if (uIndex !== -1) users[uIndex].name = newN;
         currentUser.name = newN;
 
+        // Cập nhật tên trong các bài viết, cmt, tin nhắn cũ
         posts.forEach(p => {
-            if (p.author.toLowerCase() === oldN.toLowerCase()) p.author = newN;
-            p.likes = p.likes.map(l => l.toLowerCase() === oldN.toLowerCase() ? newN : l);
-            p.dislikes = p.dislikes.map(d => d.toLowerCase() === oldN.toLowerCase() ? newN : d);
-            p.comments.forEach(c => {
-                if (c.author.toLowerCase() === oldN.toLowerCase()) c.author = newN;
-            });
+            if (p.author === oldN) p.author = newN;
+            p.likes = p.likes.map(l => l === oldN ? newN : l);
+            p.dislikes = p.dislikes.map(d => d === oldN ? newN : d);
+            p.comments.forEach(c => { if (c.author === oldN) c.author = newN; });
         });
-
-        chats.forEach(c => {
-            if (c.author.toLowerCase() === oldN.toLowerCase()) c.author = newN;
-        });
-
+        chats.forEach(c => { if (c.author === oldN) c.author = newN; });
         privateMessages.forEach(m => {
-            if (m.from.toLowerCase() === oldN.toLowerCase()) m.from = newN;
-            if (m.to.toLowerCase() === oldN.toLowerCase()) m.to = newN;
+            if (m.from === oldN) m.from = newN;
+            if (m.to === oldN) m.to = newN;
         });
 
         saveData();
         updateUserUI();
-        alert('Đổi tên thành công trên toàn hệ thống!');
+        alert('Đổi tên hiển thị thành công!');
         document.getElementById('newNameInput').value = '';
     }
 
@@ -420,7 +545,7 @@
         const reader = new FileReader();
         reader.onload = function(e) {
             currentUser.avatar = e.target.result;
-            let uIndex = users.findIndex(x => x.name.toLowerCase() === currentUser.name.toLowerCase());
+            let uIndex = users.findIndex(x => x.name === currentUser.name);
             if (uIndex !== -1) users[uIndex].avatar = currentUser.avatar;
             saveData();
             updateUserUI();
@@ -436,7 +561,7 @@
         if (currentUser.pass !== oldP) return alert('Mật khẩu cũ không chính xác!');
 
         currentUser.pass = newP;
-        let uIndex = users.findIndex(x => x.name.toLowerCase() === currentUser.name.toLowerCase());
+        let uIndex = users.findIndex(x => x.name === currentUser.name);
         if (uIndex !== -1) users[uIndex].pass = newP;
         saveData();
         alert('Đổi mật khẩu thành công!');
@@ -444,22 +569,32 @@
         document.getElementById('newPass').value = '';
     }
 
+    // ---------------- TÍNH NĂNG ADMIN ----------------
     function renderAdminPanel() {
         if (currentUser?.role !== 'admin') {
             document.getElementById('adminPanel').classList.add('hidden');
             return;
         }
         document.getElementById('adminPanel').classList.remove('hidden');
+        
         const div = document.getElementById('userList');
         div.innerHTML = users.map((u, i) => `
             <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center; background:rgba(0,0,0,0.03); padding:6px; border-radius:4px;">
-                <span><b>${u.name}</b> (${u.role}) ${u.banned ? '<b style="color:red">[BANNED]</b>' : ''}</span>
+                <span>
+                    <b>${u.name}</b> 
+                    <small>(${u.fullName || ''} - Lớp ${u.class || ''})</small> 
+                    ${u.banned ? '<b style="color:red">[BỊ KHÓA]</b>' : ''}
+                </span>
                 <div>
                     ${u.role !== 'admin' ? `<button class="btn-sm btn-warning" onclick="toggleBan(${i})">${u.banned ? 'Mở Khóa' : 'Khóa (Ban)'}</button>
                     <button class="btn-sm btn-danger" onclick="deleteUser(${i})">Xóa</button>` : ''}
                 </div>
             </div>
         `).join('');
+    }
+
+    function toggleLeaderboard(isActive) {
+        db.ref('settings/leaderboardActive').set(isActive);
     }
 
     function toggleBan(index) {
@@ -474,6 +609,73 @@
         }
     }
 
+    // BÁO CÁO (REPORT)
+    function showReportPrompt(reportedName) {
+        let reason = prompt(`Bạn muốn báo cáo [${reportedName}] vì lý do gì? (Ví dụ: Chửi bậy, đăng ảnh bậy bạ...)`);
+        if (reason && reason.trim() !== '') {
+            reports.push({
+                id: Date.now(),
+                reporter: currentUser.name,
+                reportedUser: reportedName,
+                reason: reason,
+                status: 'Chưa xử lý',
+                time: new Date().toLocaleString()
+            });
+            db.ref('reports').set(reports);
+            alert("Đã gửi báo cáo cho Admin!");
+        }
+    }
+
+    function renderReportsList() {
+        let listDiv = document.getElementById('adminReportsList');
+        if(!listDiv) return;
+
+        if (reports.length === 0) {
+            listDiv.innerHTML = "<p style='color:gray;'>Không có báo cáo nào.</p>";
+            return;
+        }
+
+        listDiv.innerHTML = reports.map((r, i) => `
+            <div style="border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:10px;">
+                <b style="color:red;">🚨 Bị báo cáo: ${r.reportedUser}</b><br>
+                <small>Người gửi: ${r.reporter} - Lúc: ${r.time}</small><br>
+                Lý do: <i>${r.reason}</i><br>
+                Trạng thái: <b>${r.status}</b> 
+                ${r.status === 'Chưa xử lý' ? `<button class="btn-sm btn-success" style="margin-left:10px;" onclick="resolveReport(${i})">Đánh dấu đã xử lý</button>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function resolveReport(index) {
+        reports[index].status = 'Đã xử lý ✅';
+        db.ref('reports').set(reports);
+    }
+
+    // THEO DÕI (FOLLOW)
+    function toggleFollowUser(targetName) {
+        let targetUserIndex = users.findIndex(u => u.name === targetName);
+        if (targetUserIndex === -1) return;
+        
+        let targetUser = users[targetUserIndex];
+        if (!targetUser.followers) targetUser.followers = [];
+
+        let myName = currentUser.name;
+        let isFollowing = targetUser.followers.includes(myName);
+
+        if (isFollowing) {
+            // Hủy follow
+            targetUser.followers = targetUser.followers.filter(f => f !== myName);
+            alert(`Đã BỎ theo dõi ${targetName}`);
+        } else {
+            // Follow
+            targetUser.followers.push(myName);
+            alert(`Đã THEO DÕI ${targetName} ❤️`);
+        }
+        saveData();
+    }
+
+
+    // ---------------- ĐĂNG BÀI VÀ FEED ----------------
     function createPost() {
         const title = document.getElementById('postTitle').value.trim();
         const content = document.getElementById('postContent').value.trim();
@@ -496,10 +698,8 @@
             id: Date.now(),
             author: currentUser.name,
             title, content, image,
-            likes: [], 
-            dislikes: [],
-            score: null, review: '',
-            comments: []
+            likes: [], dislikes: [],
+            score: null, review: '', comments: []
         });
         saveData();
         document.getElementById('postTitle').value = '';
@@ -511,10 +711,9 @@
         let p = posts.find(x => x.id === postId);
         let uName = currentUser.name;
         
-        p.dislikes = p.dislikes.filter(n => n.toLowerCase() !== uName.toLowerCase());
-
-        if (p.likes.some(l => l.toLowerCase() === uName.toLowerCase())) {
-            p.likes = p.likes.filter(n => n.toLowerCase() !== uName.toLowerCase());
+        p.dislikes = p.dislikes.filter(n => n !== uName);
+        if (p.likes.includes(uName)) {
+            p.likes = p.likes.filter(n => n !== uName);
             updateAuthorHearts(p.author, -1);
         } else {
             p.likes.push(uName);
@@ -527,13 +726,12 @@
         let p = posts.find(x => x.id === postId);
         let uName = currentUser.name;
 
-        if (p.likes.some(l => l.toLowerCase() === uName.toLowerCase())) {
-            p.likes = p.likes.filter(n => n.toLowerCase() !== uName.toLowerCase());
+        if (p.likes.includes(uName)) {
+            p.likes = p.likes.filter(n => n !== uName);
             updateAuthorHearts(p.author, -1);
         }
-
-        if (p.dislikes.some(d => d.toLowerCase() === uName.toLowerCase())) {
-            p.dislikes = p.dislikes.filter(n => n.toLowerCase() !== uName.toLowerCase());
+        if (p.dislikes.includes(uName)) {
+            p.dislikes = p.dislikes.filter(n => n !== uName);
         } else {
             p.dislikes.push(uName);
         }
@@ -541,7 +739,7 @@
     }
 
     function updateAuthorHearts(authorName, change) {
-        let author = users.find(u => u.name.toLowerCase() === authorName.toLowerCase());
+        let author = users.find(u => u.name === authorName);
         if (author) author.hearts = Math.max(0, (author.hearts || 0) + change);
     }
 
@@ -550,11 +748,11 @@
         if (posts.length === 0) { div.innerHTML = 'Chưa có tác phẩm nào.'; return; }
 
         div.innerHTML = posts.map((p) => {
-            let hasLiked = p.likes.some(l => l.toLowerCase() === currentUser?.name?.toLowerCase());
-            let hasDisliked = p.dislikes.some(d => d.toLowerCase() === currentUser?.name?.toLowerCase());
+            let hasLiked = p.likes.includes(currentUser?.name);
+            let hasDisliked = p.dislikes.includes(currentUser?.name);
             return `
             <div class="post">
-                <h4>${p.title} <small style="color:gray">bởi ${p.author}</small></h4>
+                <h4>${p.title} <small style="color:gray">bởi <b>${p.author}</b></small></h4>
                 <p>${p.content}</p>
                 ${p.image ? `<img src="${p.image}" alt="Tác phẩm">` : ''}
 
@@ -658,27 +856,39 @@
                     <p style="margin: 5px 0;">${p.content}</p>
                     ${p.image ? `<img src="${p.image}" style="max-height: 150px; border-radius: 6px;" alt="Tranh">` : ''}
                     <div style="margin-top: 5px; font-weight: bold; color: #059669;">
-                        👍 ${p.likes.length} Thích &nbsp; | &nbsp; <span style="color: #EF4444;">👎 ${p.dislikes.length} Không thích</span>
+                        👍 ${p.likes.length} Thích
                     </div>
                 </div>
             </div>
         `).join('');
     }
 
+    // ---------------- DANH SÁCH USER (NHẮN TIN / FOLLOW / REPORT) ----------------
     function renderDirectUserList() {
         const div = document.getElementById('directUserList');
         if (!currentUser) return;
-        div.innerHTML = users.filter(u => u.name.toLowerCase() !== currentUser.name.toLowerCase()).map(u => `
-            <div onclick="selectChatUser('${u.name}')" style="padding: 8px; margin-bottom: 5px; background: rgba(0,0,0,0.03); border-radius: 6px; cursor: pointer; display: flex; align- items: center; gap: 8px;">
-                <img src="${u.avatar || 'https://via.placeholder.com/30'}" class="avatar-sm" style="width:30px; height:30px;" alt="">
-                <span><b>${u.name}</b> (${u.role})</span>
+        div.innerHTML = users.filter(u => u.name !== currentUser.name).map(u => {
+            let isFollowing = (u.followers || []).includes(currentUser.name);
+            return `
+            <div style="padding: 8px; margin-bottom: 5px; background: rgba(0,0,0,0.03); border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
+                <div onclick="selectChatUser('${u.name}')" style="cursor: pointer; display: flex; align-items: center; gap: 8px; flex: 1;">
+                    <img src="${u.avatar || 'https://via.placeholder.com/30'}" class="avatar-sm" style="width:30px; height:30px;" alt="">
+                    <span><b>${u.name}</b> <br><small style="color:gray;">(${u.fullName || ''} - Lớp ${u.class || ''})</small></span>
+                </div>
+                
+                <div style="display:flex; gap: 5px;">
+                    <button class="btn-sm ${isFollowing ? 'btn-secondary' : 'btn-success'}" onclick="toggleFollowUser('${u.name}')">
+                        ${isFollowing ? 'Hủy Follow' : '❤️ Follow'}
+                    </button>
+                    <button class="btn-sm btn-danger" title="Báo cáo người này" onclick="showReportPrompt('${u.name}')">🚩</button>
+                </div>
             </div>
-        `).join('');
+        `}).join('');
     }
 
     function selectChatUser(name) {
         chattingWithUser = name;
-        document.getElementById('chattingWithTitle').innerText = `Đang nhắn tin riêng với: ${name}`;
+        document.getElementById('chattingWithTitle').innerText = `💬 Đang nhắn tin với: ${name}`;
         document.getElementById('privateInputArea').classList.remove('hidden');
         renderPrivateMessages();
     }
@@ -703,14 +913,14 @@
         if (!chattingWithUser || !currentUser) return;
 
         let filtered = privateMessages.filter(m => 
-            (m.from.toLowerCase() === currentUser.name.toLowerCase() && m.to.toLowerCase() === chattingWithUser.toLowerCase()) ||
-            (m.from.toLowerCase() === chattingWithUser.toLowerCase() && m.to.toLowerCase() === currentUser.name.toLowerCase())
+            (m.from === currentUser.name && m.to === chattingWithUser) ||
+            (m.from === chattingWithUser && m.to === currentUser.name)
         );
 
         box.innerHTML = filtered.map(m => `
-            <div style="margin-bottom: 6px; text-align: ${m.from.toLowerCase() === currentUser.name.toLowerCase() ? 'right' : 'left'};">
+            <div style="margin-bottom: 6px; text-align: ${m.from === currentUser.name ? 'right' : 'left'};">
                 <span style="font-size: 11px; color: gray;">[${m.time}]</span>
-                <span style="background: ${m.from.toLowerCase() === currentUser.name.toLowerCase() ? '#4F46E5; color: white;' : '#E5E7EB; color: black;'}; padding: 6px 10px; border-radius: 8px; display: inline-block; text-align: left;">
+                <span style="background: ${m.from === currentUser.name ? '#4F46E5; color: white;' : '#E5E7EB; color: black;'}; padding: 6px 10px; border-radius: 8px; display: inline-block; text-align: left; max-width: 80%;">
                     <b>${m.from}:</b> ${m.text}
                 </span>
             </div>

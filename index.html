@@ -24,6 +24,7 @@
         .btn-warning { background: #F59E0B; }
         .btn-success { background: #059669; }
         .btn-secondary { background: #6B7280; }
+        .btn-primary { background: #4F46E5; }
         .btn-sm { width: auto; padding: 6px 12px; font-size: 13px; margin-right: 5px; display: inline-block; }
         
         .badge { padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; color: white; }
@@ -479,7 +480,6 @@
         document.getElementById('profileUsernameText').innerText = currentUser.username;
         document.getElementById('profileFullNameText').innerText = currentUser.fullName;
         
-        // CẬP NHẬT HIỂN THỊ HỒ SƠ RIÊNG LỚP & CHỨC VỤ
         let roleStr = currentUser.role === 'admin' ? 'QUẢN TRỊ VIÊN' : (currentUser.role === 'teacher' ? 'GIÁO VIÊN' : (currentUser.role === 'owner' ? 'OWNER' : 'HỌC SINH'));
         document.getElementById('profileRoleText').innerText = roleStr;
         document.getElementById('profileClassText').innerText = currentUser.class ? currentUser.class.toUpperCase() : 'Không có';
@@ -514,11 +514,11 @@
         document.getElementById('adminAnnouncementSection').style.display = isAdmin ? 'block' : 'none';
 
         div.innerHTML = users.map(u => {
-            let actionButtons = '';
+            let actionButtons = `<button class="btn-sm btn-primary" onclick="openProfileModal('${u.username}')">Hồ Sơ</button>`;
 
             if (u.username !== currentUser.username) {
                 if (isAdmin) {
-                    actionButtons = `
+                    actionButtons += `
                         <select onchange="changeUserRole('${u.username}', this.value)" style="margin:0; padding:4px; width:auto; font-size:12px;">
                             <option value="student" ${u.role==='student'?'selected':''}>Học sinh</option>
                             <option value="teacher" ${u.role==='teacher'?'selected':''}>Giáo viên</option>
@@ -526,17 +526,17 @@
                             <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
                         </select>
                         <button class="btn-sm btn-warning" onclick="toggleBan('${u.username}')">${u.banned ? 'Mở Khóa' : 'Khóa'}</button>
-                        ${u.role !== 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteUser('${u.username}')">Xóa</button>` : `<span style="font-size:11px; color:gray;">(Tài khoản Admin)</span>`}
+                        ${u.role !== 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteUser('${u.username}')">Xóa</button>` : `<span style="font-size:11px; color:gray;">(Admin)</span>`}
                     `;
                 } else if (isOwner) {
                     if (u.role === 'student') {
-                        actionButtons = `<button class="btn-sm btn-warning" onclick="toggleBan('${u.username}')">${u.banned ? 'Mở Khóa' : 'Khóa'}</button>`;
+                        actionButtons += `<button class="btn-sm btn-warning" onclick="toggleBan('${u.username}')">${u.banned ? 'Mở Khóa' : 'Khóa'}</button>`;
                     } else {
-                        actionButtons = `<span style="font-size:11px; color:gray;">(Không thể can thiệp)</span>`;
+                        actionButtons += `<span style="font-size:11px; color:gray;">(Không thể can thiệp)</span>`;
                     }
                 }
             } else {
-                actionButtons = `<span style="font-size:12px; color:gray;">(Bạn đang đăng nhập)</span>`;
+                actionButtons += `<span style="font-size:12px; color:gray;">(Tài khoản của bạn)</span>`;
             }
 
             let roleBadge = u.role === 'admin' ? '<b style="color:#DC2626;">ADMIN</b>' : 
@@ -619,7 +619,6 @@
         `).join('');
     }
     
-    // ĐẾN THẲNG BÀI ĐĂNG BỊ TỐ CÁO & NỔI BẬT KHUNG VIỀN ĐỎ
     function goToPost(postId) {
         switchTab('feed');
         setTimeout(() => {
@@ -747,11 +746,20 @@
         let theyFollowMe = (currentUser.followers || []).includes(viewingUser.username);
         let mutualFollow = isFollowing && theyFollowMe;
         
+        // CHO PHÉP NHẮN TIN NẾU LÀ ADMIN HOẶC DÃ FOLLOW CHÉO
+        let isTargetAdmin = viewingUser.role === 'admin';
+        let canChat = mutualFollow || isTargetAdmin;
+
         let btnChat = document.getElementById('pubBtnChat');
         let chatWarn = document.getElementById('pubChatWarning');
         
-        if (mutualFollow) { btnChat.disabled = false; chatWarn.style.display = "none"; } 
-        else { btnChat.disabled = true; chatWarn.style.display = "block"; }
+        if (canChat) { 
+            btnChat.disabled = false; 
+            chatWarn.style.display = "none"; 
+        } else { 
+            btnChat.disabled = true; 
+            chatWarn.style.display = "block"; 
+        }
 
         document.getElementById('publicProfileModal').classList.remove('hidden');
     }
@@ -768,9 +776,11 @@
     }
 
     function startPrivateChat() {
-        closeProfileModal(); chattingWithUser = viewingUser.username;
+        closeProfileModal(); 
+        chattingWithUser = viewingUser.username;
         document.getElementById('chattingWithTitle').innerText = `💬 Đang nhắn tin với: ${viewingUser.name}`;
         document.getElementById('privateInputArea').classList.remove('hidden');
+        switchTab('messages');
         renderPrivateMessages();
     }
 

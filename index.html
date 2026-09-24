@@ -29,6 +29,7 @@
         .badge { padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; color: white; }
         .badge-admin { background: #DC2626; }
         .badge-teacher { background: #059669; }
+        .badge-owner { background: #7C3AED; }
         
         .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; flex-wrap: wrap; }
         .nav-tabs button { flex: 1; min-width: 120px; background: #E5E7EB; color: #374151; padding: 10px; }
@@ -67,11 +68,12 @@
         <button onclick="closeProfileModal()" style="position: absolute; right: 10px; top: 10px; width: auto; background: none; color: var(--text); padding: 0; font-size: 20px;">✖</button>
         <img id="pubAvatar" src="" style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin-top: 10px;">
         <h3 id="pubName" style="margin: 10px 0 5px 0;"></h3>
-        <p id="pubRoleClass" style="margin: 0; color: gray; font-size: 14px; font-weight: bold;"></p>
         
-        <div style="background: rgba(128,128,128,0.1); padding: 10px; border-radius: 8px; margin: 15px 0;">
-            <p style="margin: 5px 0;">Họ tên thật: <b id="pubFullName"></b></p>
-            <p style="margin: 5px 0;">❤️ <b id="pubHearts"></b> Tym | 🌟 <b id="pubFollowers"></b> Người theo dõi</p>
+        <div style="background: rgba(128,128,128,0.1); padding: 12px; border-radius: 8px; margin: 15px 0; text-align: left; font-size: 14px;">
+            <p style="margin: 4px 0;"><b>Họ tên thật:</b> <span id="pubFullName"></span></p>
+            <p style="margin: 4px 0;"><b>LỚP:</b> <b id="pubClass" style="color: var(--primary);"></b></p>
+            <p style="margin: 4px 0;"><b>CHỨC VỤ:</b> <b id="pubRole" style="color: #059669;"></b></p>
+            <p style="margin: 8px 0 0 0; font-size:13px; text-align:center;">❤️ <b id="pubHearts"></b> Tym | 🌟 <b id="pubFollowers"></b> Người theo dõi</p>
         </div>
 
         <button id="pubBtnFollow" class="btn-success" onclick="executeFollow()" style="margin-bottom: 10px;">❤️ Theo dõi</button>
@@ -143,13 +145,13 @@
             <button id="btn-admin" onclick="switchTab('admin')" class="hidden" style="background:#DC2626; color:white;">⚙️ Quản Trị</button>
         </div>
 
-        <!-- TAB QUẢN TRỊ VIÊN -->
+        <!-- TAB QUẢN TRỊ VIÊN / OWNER -->
         <div id="tab-admin" class="hidden">
             <div class="card" style="border: 2px solid #DC2626;">
-                <h3 style="color: #DC2626; margin-top: 0;">⚙️ Bảng Điều Khiển Của Admin</h3>
+                <h3 style="color: #DC2626; margin-top: 0;">⚙️ Bảng Điều Khiển Quản Trị</h3>
                 
-                <!-- Bật/Tắt Cấu Hình -->
-                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
+                <!-- Bật/Tắt Cấu Hình (Chỉ Admin thấy) -->
+                <div id="adminConfigSection" style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
                     <div style="flex: 1; background: rgba(220, 38, 38, 0.1); padding: 10px; border-radius: 8px;">
                         <strong>🏆 Bảng Xếp Hạng:</strong> 
                         <label class="switch" style="vertical-align: middle; margin: 0 5px;">
@@ -169,9 +171,9 @@
                     </div>
                 </div>
 
-                <!-- Gửi Thông Báo Linh Hoạt -->
-                <div style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3B82F6;">
-                    <h4 style="margin-top: 0; color: #1D4ED8;">📢 Gửi Thông Báo Hệ Thống</h4>
+                <!-- Gửi Thông Báo Hệ Thống (Chỉ Admin thấy) -->
+                <div id="adminAnnouncementSection" style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #3B82F6;">
+                    <h4 style="margin-top: 0; color: #1D4ED8;">📢 Gửi Thông Báo Hệ Thống (Chỉ Admin)</h4>
                     
                     <label style="font-size: 13px; font-weight: bold;">Gửi tới đối tượng nào?</label>
                     <select id="announcementTargetSelect" style="margin-bottom: 8px;">
@@ -182,11 +184,17 @@
                     
                     <div style="margin-top: 5px;">
                         <button class="btn-success btn-sm" onclick="sendAnnouncement()">Phát Thông Báo</button>
-                        <button class="btn-danger btn-sm" onclick="clearAnnouncement()">Xóa Thông Báo Của Đối Tượng Đã Chọn</button>
+                        <button class="btn-danger btn-sm" onclick="clearAnnouncement()">Xóa Thông Báo</button>
                     </div>
                 </div>
 
-                <h4>👥 Quản Lý Phân Quyền & Người Dùng</h4>
+                <!-- Danh sách Phiếu Tố Cáo (Admin & Owner xem) -->
+                <div style="background: rgba(239, 68, 68, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #EF4444;">
+                    <h4 style="margin-top: 0; color: #DC2626;">🚨 Phiếu Tố Cáo Tác Phẩm</h4>
+                    <div id="adminReportsList" style="max-height: 180px; overflow-y: auto;"></div>
+                </div>
+
+                <h4>👥 Quản Lý Người Dùng</h4>
                 <div id="userList" style="max-height: 350px; overflow-y: auto;"></div>
             </div>
         </div>
@@ -255,10 +263,11 @@
                     <img id="profileAvatar" src="" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary);">
                     <h3 id="profileName" style="margin: 10px 0 5px 0;"></h3>
                     
-                    <div style="background: rgba(128,128,128,0.1); padding: 10px; border-radius: 8px; text-align: left; margin-bottom: 10px; font-size: 14px;">
+                    <div style="background: rgba(128,128,128,0.1); padding: 12px; border-radius: 8px; text-align: left; margin-bottom: 10px; font-size: 14px;">
                         <p style="margin: 5px 0;"><b>Tên đăng nhập:</b> <span id="profileUsernameText"></span></p>
                         <p style="margin: 5px 0;"><b>Họ tên thật:</b> <span id="profileFullNameText"></span></p>
-                        <p style="margin: 5px 0;"><b>Chức vụ/Lớp:</b> <span id="profileRole" style="font-weight: bold; color: var(--primary);"></span></p>
+                        <p style="margin: 5px 0;"><b>LỚP:</b> <span id="profileClassText" style="font-weight: bold; color: var(--primary);"></span></p>
+                        <p style="margin: 5px 0;"><b>CHỨC VỤ:</b> <span id="profileRoleText" style="font-weight: bold; color: #059669;"></span></p>
                     </div>
                     <div style="font-size: 16px; font-weight: bold; color: #EF4444;">
                         ❤️ Tym: <span id="profileHearts">0</span> | 🌟 Follower: <span id="profileFollowers">0</span>
@@ -266,10 +275,9 @@
                 </div>
 
                 <div id="nameChangeSection" style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px; border: 1px solid #10B981; margin-bottom: 20px;">
-                    <h4 style="margin-top: 0; color: #047857;">✏️ Đổi Tên Hiển Thị (Quyền GV/Admin)</h4>
+                    <h4 style="margin-top: 0; color: #047857;">✏️ Đổi Tên Hiển Thị (Quyền GV/Admin/Owner)</h4>
                     <input type="text" id="newNameInput" placeholder="Nhập Tên mới...">
                     <button onclick="changeName()" class="btn-success">Lưu Tên Mới</button>
-                    <p style="font-size: 12px; color: gray; margin-top: 5px;">Tên mới sẽ tự động cập nhật cho các bài đăng và tin nhắn cũ.</p>
                 </div>
 
                 <h4>🖼️ Đổi Ảnh Đại Diện</h4>
@@ -302,7 +310,7 @@
     const db = firebase.database();
 
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-    let posts = [], chats = [], privateMessages = [], users = [];
+    let posts = [], chats = [], privateMessages = [], users = [], reports = [];
     let chattingWithUser = null, viewingUser = null;
     let isLeaderboardActive = true, isChatLocked = false;
     let announcementsData = {};
@@ -356,6 +364,12 @@
         renderPrivateMessages();
     });
 
+    db.ref('reports').on('value', snapshot => {
+        let data = snapshot.val();
+        reports = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+        renderReportsList();
+    });
+
     db.ref('settings/leaderboardActive').on('value', snapshot => {
         isLeaderboardActive = snapshot.val() === null ? true : snapshot.val();
         let toggle = document.getElementById('adminToggleLeaderboard');
@@ -363,7 +377,7 @@
         let st = document.getElementById('leaderboardStatusText');
         if(st) { st.innerText = isLeaderboardActive ? "Đang Bật" : "Đã Tắt"; st.style.color = isLeaderboardActive ? "#B91C1C" : "gray"; }
 
-        if (currentUser && currentUser.role !== 'admin') {
+        if (currentUser && currentUser.role !== 'admin' && currentUser.role !== 'owner') {
             document.getElementById('btn-top7').style.display = isLeaderboardActive ? "inline-block" : "none";
             if(!isLeaderboardActive && currentTab === 'top7') switchTab('feed');
         }
@@ -420,7 +434,7 @@
 
         let found = users.find(x => x && x.username === u);
         if (!found) return alert('Sai tên đăng nhập!');
-        if (found.banned) return alert('Tài khoản đã bị Admin khóa!');
+        if (found.banned) return alert('Tài khoản đã bị Khóa!');
         if (found.pass !== p) return alert('Sai mật khẩu!');
 
         currentUser = found;
@@ -448,11 +462,15 @@
 
     function updateUserUI() {
         if (!currentUser) return;
-        document.getElementById('btn-admin').classList.toggle('hidden', currentUser.role !== 'admin');
-        document.getElementById('btn-top7').style.display = (currentUser.role === 'admin' || isLeaderboardActive) ? "inline-block" : "none";
+        let isPowerUser = currentUser.role === 'admin' || currentUser.role === 'owner';
+        document.getElementById('btn-admin').classList.toggle('hidden', !isPowerUser);
+        document.getElementById('btn-top7').style.display = (isPowerUser || isLeaderboardActive) ? "inline-block" : "none";
         document.getElementById('nameChangeSection').style.display = (currentUser.role === 'student') ? "none" : "block";
 
-        let badge = currentUser.role === 'admin' ? ' <span class="badge badge-admin">ADMIN</span>' : (currentUser.role === 'teacher' ? ' <span class="badge badge-teacher">GIÁO VIÊN</span>' : '');
+        let badge = currentUser.role === 'admin' ? ' <span class="badge badge-admin">ADMIN</span>' : 
+                   (currentUser.role === 'teacher' ? ' <span class="badge badge-teacher">GIÁO VIÊN</span>' : 
+                   (currentUser.role === 'owner' ? ' <span class="badge badge-owner">OWNER</span>' : ''));
+                   
         document.getElementById('userInfoText').innerHTML = `<b>${currentUser.name}</b>${badge}`;
         document.getElementById('headerAvatar').src = currentUser.avatar || 'https://via.placeholder.com/40';
         
@@ -461,8 +479,10 @@
         document.getElementById('profileUsernameText').innerText = currentUser.username;
         document.getElementById('profileFullNameText').innerText = currentUser.fullName;
         
-        // HIỂN THỊ CHỨC VỤ KIỂU MỚI (HỌC SINH LỚP X)
-        document.getElementById('profileRole').innerText = currentUser.role === 'admin' ? 'QUẢN TRỊ VIÊN' : (currentUser.role === 'teacher' ? 'GIÁO VIÊN' : 'HỌC SINH LỚP ' + (currentUser.class || '').toUpperCase());
+        // CẬP NHẬT HIỂN THỊ HỒ SƠ RIÊNG LỚP & CHỨC VỤ
+        let roleStr = currentUser.role === 'admin' ? 'QUẢN TRỊ VIÊN' : (currentUser.role === 'teacher' ? 'GIÁO VIÊN' : (currentUser.role === 'owner' ? 'OWNER' : 'HỌC SINH'));
+        document.getElementById('profileRoleText').innerText = roleStr;
+        document.getElementById('profileClassText').innerText = currentUser.class ? currentUser.class.toUpperCase() : 'Không có';
         
         document.getElementById('profileHearts').innerText = currentUser.hearts || 0;
         document.getElementById('profileFollowers').innerText = currentUser.followers ? currentUser.followers.length : 0;
@@ -481,35 +501,56 @@
         if (tabId === 'top7') renderTop7();
     }
 
-    // ================= QUẢN TRỊ VIÊN =================
+    // ================= QUẢN TRỊ VIÊN & OWNER =================
     function renderAdminPanel() {
-        if (currentUser?.role !== 'admin') return;
+        if (currentUser?.role !== 'admin' && currentUser?.role !== 'owner') return;
         const div = document.getElementById('userList');
         if (!div) return;
-        
+
+        let isAdmin = currentUser.role === 'admin';
+        let isOwner = currentUser.role === 'owner';
+
+        // Ẩn/Hiện các chức năng giới hạn với Owner
+        document.getElementById('adminConfigSection').style.display = isAdmin ? 'flex' : 'none';
+        document.getElementById('adminAnnouncementSection').style.display = isAdmin ? 'block' : 'none';
+
         div.innerHTML = users.map(u => {
-            let isTargetAdmin = u.role === 'admin';
             let actionButtons = '';
 
             if (u.username !== currentUser.username) {
-                actionButtons = `
-                    <select onchange="changeUserRole('${u.username}', this.value)" style="margin:0; padding:4px; width:auto; font-size:12px;">
-                        <option value="student" ${u.role==='student'?'selected':''}>Học sinh</option>
-                        <option value="teacher" ${u.role==='teacher'?'selected':''}>Giáo viên</option>
-                        <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
-                    </select>
-                    <button class="btn-sm btn-warning" onclick="toggleBan('${u.username}')">${u.banned ? 'Mở Khóa' : 'Khóa'}</button>
-                    ${!isTargetAdmin ? `<button class="btn-sm btn-danger" onclick="deleteUser('${u.username}')">Xóa</button>` : `<span style="font-size:11px; color:gray;">(Tài khoản Admin)</span>`}
-                `;
+                if (isAdmin) {
+                    // Admin full quyền
+                    actionButtons = `
+                        <select onchange="changeUserRole('${u.username}', this.value)" style="margin:0; padding:4px; width:auto; font-size:12px;">
+                            <option value="student" ${u.role==='student'?'selected':''}>Học sinh</option>
+                            <option value="teacher" ${u.role==='teacher'?'selected':''}>Giáo viên</option>
+                            <option value="owner" ${u.role==='owner'?'selected':''}>Owner</option>
+                            <option value="admin" ${u.role==='admin'?'selected':''}>Admin</option>
+                        </select>
+                        <button class="btn-sm btn-warning" onclick="toggleBan('${u.username}')">${u.banned ? 'Mở Khóa' : 'Khóa'}</button>
+                        ${u.role !== 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteUser('${u.username}')">Xóa</button>` : `<span style="font-size:11px; color:gray;">(Tài khoản Admin)</span>`}
+                    `;
+                } else if (isOwner) {
+                    // Owner chỉ ban được Học Sinh. Không ban được Admin, Teacher, Owner khác
+                    if (u.role === 'student') {
+                        actionButtons = `<button class="btn-sm btn-warning" onclick="toggleBan('${u.username}')">${u.banned ? 'Mở Khóa' : 'Khóa'}</button>`;
+                    } else {
+                        actionButtons = `<span style="font-size:11px; color:gray;">(Không thể can thiệp)</span>`;
+                    }
+                }
             } else {
                 actionButtons = `<span style="font-size:12px; color:gray;">(Bạn đang đăng nhập)</span>`;
             }
+
+            let roleBadge = u.role === 'admin' ? '<b style="color:#DC2626;">ADMIN</b>' : 
+                           (u.role === 'teacher' ? '<b style="color:#059669;">GIÁO VIÊN</b>' : 
+                           (u.role === 'owner' ? '<b style="color:#7C3AED;">OWNER</b>' : `<b style="color:var(--primary);">HỌC SINH</b>`));
 
             return `
             <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:center; background: var(--card); color: var(--text); padding:8px; border: 1px solid #E5E7EB; border-radius:6px;">
                 <div style="flex: 1;">
                     <b>${u.name}</b> (${u.username}) <br>
-                    <small>${u.fullName} - <b style="color:var(--primary);">${u.role === 'student' ? 'HỌC SINH LỚP '+ (u.class||'').toUpperCase() : (u.role==='teacher'?'GIÁO VIÊN':'ADMIN')}</b></small>
+                    <small>${u.fullName} - Chức vụ: ${roleBadge} | Lớp: <b>${u.class ? u.class.toUpperCase() : 'Không có'}</b></small>
                     ${u.banned ? '<b style="color:red; font-size:12px;"> [BỊ KHÓA]</b>' : ''}
                 </div>
                 <div style="display: flex; gap: 5px; align-items: center;">
@@ -520,21 +561,66 @@
     }
 
     function changeUserRole(username, newRole) {
+        if (currentUser.role !== 'admin') return alert('Chỉ Admin mới có quyền cấp lại chức vụ!');
         let u = users.find(x => x.username === username);
         if (u) { u.role = newRole; if (newRole !== 'student') u.class = ''; saveData(); alert(`Đã cập nhật quyền ${newRole} cho ${username}`); }
     }
 
-    function toggleLeaderboard(isActive) { db.ref('settings/leaderboardActive').set(isActive); }
-    function toggleChatLock(isLocked) { db.ref('settings/chatLocked').set(isLocked); }
-    function toggleBan(username) { let u = users.find(x => x.username === username); if (u) { u.banned = !u.banned; saveData(); } }
+    function toggleLeaderboard(isActive) { if(currentUser.role === 'admin') db.ref('settings/leaderboardActive').set(isActive); }
+    function toggleChatLock(isLocked) { if(currentUser.role === 'admin') db.ref('settings/chatLocked').set(isLocked); }
+    
+    function toggleBan(username) { 
+        let u = users.find(x => x.username === username); 
+        if (!u) return;
+        if (currentUser.role === 'owner' && u.role !== 'student') {
+            return alert('Owner chỉ có quyền khóa tài khoản Học sinh!');
+        }
+        u.banned = !u.banned; 
+        saveData(); 
+    }
     
     function deleteUser(username) { 
+        if (currentUser.role !== 'admin') return alert('Owner không có quyền xóa tài khoản!');
         let target = users.find(u => u.username === username);
         if(target && target.role === 'admin') return alert('Không thể xóa tài khoản Admin!');
         if(confirm(`Xóa vĩnh viễn tài khoản ${username}?`)) { users = users.filter(x => x.username !== username); saveData(); } 
     }
 
-    // THÔNG BÁO LINH HOẠT
+    // BÁO CÁO (REPORTS)
+    function reportPost(postId) {
+        let p = posts.find(x => x.id === postId); if(!p) return;
+        let reason = prompt("Nhập lý do tố cáo tác phẩm này:");
+        if (!reason || !reason.trim()) return;
+        
+        reports.push({
+            id: Date.now() + Math.random(),
+            postId: p.id,
+            postTitle: p.title,
+            reportedBy: currentUser.username,
+            reason: reason.trim(),
+            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        });
+        db.ref('reports').set(reports);
+        alert("Đã gửi báo cáo vi phạm thành công!");
+    }
+
+    function renderReportsList() {
+        const div = document.getElementById('adminReportsList');
+        if (!div) return;
+        if (reports.length === 0) return div.innerHTML = '<p style="font-size:12px; color:gray; margin:0;">Chưa có báo cáo nào.</p>';
+        div.innerHTML = reports.map(r => `
+            <div style="border-bottom: 1px solid rgba(128,128,128,0.2); padding: 5px 0; font-size:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <b>[Bài: ${r.postTitle}]</b> bởi <i>${r.reportedBy}</i> (${r.time})<br>
+                    <span style="color:#EF4444;">Lý do: ${r.reason}</span>
+                </div>
+                ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteReport(${r.id})" style="padding:2px 6px; font-size:11px;">Gỡ</button>` : ''}
+            </div>
+        `).join('');
+    }
+    function deleteReport(reportId) { reports = reports.filter(r => r.id !== reportId); db.ref('reports').set(reports); }
+
+    // THÔNG BÁO HỆ THỐNG
     function updateAnnouncementTargetDropdown() {
         let sel = document.getElementById('announcementTargetSelect');
         if(!sel) return;
@@ -545,35 +631,28 @@
     }
 
     function sendAnnouncement() {
+        if(currentUser.role !== 'admin') return alert('Chỉ Admin mới có quyền phát thông báo!');
         let target = document.getElementById('announcementTargetSelect').value;
         let txt = document.getElementById('adminAnnouncementInput').value.trim();
         if(!txt) return alert('Vui lòng nhập nội dung thông báo!');
 
-        if (target === 'ALL') {
-            db.ref('announcements/global').set({ text: txt, time: Date.now() });
-            alert('Đã gửi thông báo đến TOÀN SERVER!');
-        } else {
-            db.ref(`announcements/users/${target}`).set({ text: txt, time: Date.now() });
-            alert(`Đã gửi thông báo riêng đến tài khoản ${target}!`);
-        }
+        if (target === 'ALL') db.ref('announcements/global').set({ text: txt, time: Date.now() });
+        else db.ref(`announcements/users/${target}`).set({ text: txt, time: Date.now() });
+        alert('Đã gửi thông báo!');
     }
 
     function clearAnnouncement() {
+        if(currentUser.role !== 'admin') return alert('Chỉ Admin mới có quyền xóa thông báo!');
         let target = document.getElementById('announcementTargetSelect').value;
-        if (target === 'ALL') {
-            db.ref('announcements/global').remove();
-            alert('Đã xóa thông báo toàn server!');
-        } else {
-            db.ref(`announcements/users/${target}`).remove();
-            alert(`Đã xóa thông báo của tài khoản ${target}!`);
-        }
+        if (target === 'ALL') db.ref('announcements/global').remove();
+        else db.ref(`announcements/users/${target}`).remove();
         document.getElementById('adminAnnouncementInput').value = "";
+        alert('Đã xóa thông báo!');
     }
 
     function checkAndShowAnnouncement() {
         if (!currentUser) return;
-        let msgToShow = null;
-        let targetLabel = "";
+        let msgToShow = null; let targetLabel = "";
 
         if (announcementsData.users && announcementsData.users[currentUser.username]) {
             msgToShow = announcementsData.users[currentUser.username].text;
@@ -605,7 +684,9 @@
         const div = document.getElementById('directUserList');
         if (!currentUser || !div) return;
         div.innerHTML = users.filter(u => u && u.username !== currentUser.username).map(u => {
-            let roleStr = u.role === 'teacher' ? '<span style="color:#059669; font-size:12px; font-weight:bold;">GIÁO VIÊN</span>' : (u.role === 'admin' ? '<span style="color:red; font-size:12px; font-weight:bold;">ADMIN</span>' : `<small style="color:var(--primary); font-weight:bold;">HỌC SINH LỚP ${(u.class||'').toUpperCase()}</small>`);
+            let roleStr = u.role === 'teacher' ? '<span style="color:#059669; font-size:12px; font-weight:bold;">GIÁO VIÊN</span>' : 
+                         (u.role === 'admin' ? '<span style="color:red; font-size:12px; font-weight:bold;">ADMIN</span>' : 
+                         (u.role === 'owner' ? '<span style="color:#7C3AED; font-size:12px; font-weight:bold;">OWNER</span>' : `<small style="color:var(--primary); font-weight:bold;">HỌC SINH LỚP ${(u.class||'').toUpperCase()}</small>`));
             return `
             <div onclick="openProfileModal('${u.username}')" style="cursor: pointer; padding: 10px; margin-bottom: 5px; background: rgba(128,128,128,0.1); border-radius: 6px; display: flex; align-items: center; gap: 10px;">
                 <img src="${u.avatar || 'https://via.placeholder.com/40'}" class="avatar-sm">
@@ -622,10 +703,13 @@
         if(!viewingUser) return;
         
         document.getElementById('pubAvatar').src = viewingUser.avatar || 'https://via.placeholder.com/90';
-        document.getElementById('pubName').innerHTML = viewingUser.name + (viewingUser.role==='admin'?' <span class="badge badge-admin">ADMIN</span>':(viewingUser.role==='teacher'?' <span class="badge badge-teacher">GV</span>':''));
+        let badge = viewingUser.role==='admin'?' <span class="badge badge-admin">ADMIN</span>':(viewingUser.role==='teacher'?' <span class="badge badge-teacher">GV</span>':(viewingUser.role==='owner'?' <span class="badge badge-owner">OWNER</span>':''));
+        document.getElementById('pubName').innerHTML = viewingUser.name + badge;
         
-        // ĐỔI HIỂN THỊ CHỨC VỤ Ở ĐÂY
-        document.getElementById('pubRoleClass').innerText = viewingUser.role === 'student' ? `HỌC SINH LỚP ${(viewingUser.class||'').toUpperCase()}` : (viewingUser.role === 'teacher' ? 'GIÁO VIÊN' : 'QUẢN TRỊ VIÊN');
+        // CẬP NHẬT HIỂN THỊ LỚP & CHỨC VỤ TRONG MODAL
+        let roleStr = viewingUser.role === 'admin' ? 'QUẢN TRỊ VIÊN' : (viewingUser.role === 'teacher' ? 'GIÁO VIÊN' : (viewingUser.role === 'owner' ? 'OWNER' : 'HỌC SINH'));
+        document.getElementById('pubClass').innerText = viewingUser.class ? viewingUser.class.toUpperCase() : 'Không có';
+        document.getElementById('pubRole').innerText = roleStr;
         
         document.getElementById('pubFullName').innerText = viewingUser.fullName;
         document.getElementById('pubHearts').innerText = viewingUser.hearts || 0;
@@ -696,7 +780,7 @@
         let btn = document.getElementById('btnSendChat');
         if (!input || !btn) return;
         
-        if (isChatLocked && currentUser?.role !== 'admin') {
+        if (isChatLocked && currentUser?.role !== 'admin' && currentUser?.role !== 'owner') {
             input.disabled = true; btn.disabled = true;
             input.placeholder = "🔒 Admin đã khóa phòng chat chung.";
         } else {
@@ -706,7 +790,7 @@
     }
 
     function sendChat() {
-        if(isChatLocked && currentUser?.role !== 'admin') return;
+        if(isChatLocked && currentUser?.role !== 'admin' && currentUser?.role !== 'owner') return;
         const msg = document.getElementById('chatMsg').value.trim();
         if (!msg) return;
         chats.push({ 
@@ -727,13 +811,13 @@
             <div style="margin-bottom: 6px; display: flex; align-items: center; gap: 5px;">
                 <span style="flex:1;"><i>[${c.time}]</i> <b>${c.author}:</b> ${c.text}</span>
                 
-                <!-- TUYỆT ĐỐI CHỈ CÓ QUYỀN ADMIN MỚI THẤY NÚT XÓA Ở CHAT CHUNG -->
+                <!-- TUYỆT ĐỐI CHỈ ADMIN MỚI ĐƯỢC XÓA TIN NHẮN CHAT CHUNG -->
                 ${currentUser?.role === 'admin' ? `<button class="btn-sm btn-danger" onclick="deleteGlobalChat(${c.id})" style="padding: 2px 6px; font-size:11px; margin:0;">Xóa</button>` : ''}
             </div>
         `).join('');
         div.scrollTop = div.scrollHeight;
     }
-    function deleteGlobalChat(chatId) { chats = chats.filter(c => c.id !== chatId); saveData(); }
+    function deleteGlobalChat(chatId) { if(currentUser.role === 'admin') { chats = chats.filter(c => c.id !== chatId); saveData(); } }
 
     // ================= TRIỂN LÃM & CHẤM ĐIỂM & BÌNH LUẬN =================
     function createPost() {
@@ -759,7 +843,9 @@
     }
     function updateAuthorHearts(username, change) { let author = users.find(u => u.username === username); if (author) author.hearts = Math.max(0, (author.hearts || 0) + change); }
 
+    // CHỈ GIÁO VIÊN MỚI ĐƯỢC CHẤM ĐIỂM
     function gradePost(postId) {
+        if (currentUser.role !== 'teacher') return alert('Chỉ Giáo viên mới có quyền chấm điểm!');
         let p = posts.find(x => x.id === postId); if(!p) return;
         let scoreInput = document.getElementById(`score-input-${postId}`).value;
         let reviewInput = document.getElementById(`review-input-${postId}`).value.trim();
@@ -771,7 +857,7 @@
         p.score = numScore;
         p.review = reviewInput;
         saveData();
-        alert('Đã lưu điểm và nhận xét thành công!');
+        alert('Đã lưu điểm và nhận xét của Giáo viên thành công!');
     }
 
     function addComment(postId) {
@@ -806,23 +892,24 @@
         
         div.innerHTML = posts.map(p => {
             let hasLiked = (p.likes || []).includes(currentUser?.username);
-            let isTeacherOrAdmin = currentUser?.role === 'teacher' || currentUser?.role === 'admin';
+            let isTeacher = currentUser?.role === 'teacher';
 
             let gradeHTML = '';
             if (p.score !== null && p.score !== undefined) {
                 gradeHTML = `
                     <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10B981; padding: 10px; border-radius: 8px; margin-top: 10px;">
-                        <span style="font-weight: bold; color: #047857;">⭐ Điểm số: ${p.score}/10</span>
-                        ${p.review ? `<p style="margin: 5px 0 0 0; font-size: 13px;"><b>📝 Nhận xét GV:</b> ${p.review}</p>` : ''}
+                        <span style="font-weight: bold; color: #047857;">⭐ Điểm số Giáo Viên: ${p.score}/10</span>
+                        ${p.review ? `<p style="margin: 5px 0 0 0; font-size: 13px;"><b>📝 Nhận xét:</b> ${p.review}</p>` : ''}
                     </div>
                 `;
             }
 
+            // CHỈ HIỂN THỊ KHỐI CHẤM ĐIỂM CHO GIÁO VIÊN
             let gradeFormHTML = '';
-            if (isTeacherOrAdmin) {
+            if (isTeacher) {
                 gradeFormHTML = `
                     <div style="background: rgba(245, 158, 11, 0.1); border: 1px dashed #F59E0B; padding: 10px; border-radius: 8px; margin-top: 10px;">
-                        <h5 style="margin: 0 0 5px 0; color: #D97706;">✏️ Chấm điểm tác phẩm này (Giáo viên / Admin)</h5>
+                        <h5 style="margin: 0 0 5px 0; color: #D97706;">✏️ Chấm điểm tác phẩm này (Quyền Giáo viên)</h5>
                         <div style="display: flex; gap: 5px; align-items: center;">
                             <input type="number" id="score-input-${p.id}" placeholder="Điểm (0-10)" min="0" max="10" step="0.5" value="${p.score !== null && p.score !== undefined ? p.score : ''}" style="width: 100px; margin: 0;">
                             <input type="text" id="review-input-${p.id}" placeholder="Nhận xét bài..." value="${p.review || ''}" style="flex:1; margin: 0;">
@@ -841,7 +928,10 @@
 
             return `
             <div class="post">
-                <h4>${p.title} <small style="color:gray">bởi <b>${p.author}</b></small></h4>
+                <div style="display:flex; justify-style:space-between; align-items:center;">
+                    <h4 style="margin:0;">${p.title} <small style="color:gray">bởi <b>${p.author}</b></small></h4>
+                    <button class="btn-sm btn-secondary" onclick="reportPost(${p.id})" style="font-size:11px; padding:2px 6px;">🚩 Tố cáo</button>
+                </div>
                 <p>${p.content}</p>
                 ${p.image ? `<img src="${p.image}">` : ''}
                 
@@ -866,7 +956,7 @@
         `}).join('');
     }
 
-    function deletePost(postId) { if(confirm("Xóa bài viết này?")) { posts = posts.filter(x => x.id !== postId); saveData(); } }
+    function deletePost(postId) { if(currentUser.role==='admin' && confirm("Xóa bài viết này?")) { posts = posts.filter(x => x.id !== postId); saveData(); } }
 
     function renderTop7() {
         const div = document.getElementById('top7List');
@@ -878,7 +968,7 @@
                 <h2 style="color: var(--primary); margin: 0;">#${idx + 1}</h2>
                 <div>
                     <h4 style="margin: 0;">${p.title} <small>bởi ${p.author}</small></h4>
-                    <div style="color: #059669; font-weight: bold;">👍 ${(p.likes || []).length} Thích ${p.score ? `| ⭐ ${p.score}/10` : ''}</div>
+                    <div style="color: #059669; font-weight: bold;">👍 ${(p.likes || []).length} Thích ${p.score !== null && p.score !== undefined ? `| ⭐ ${p.score}/10` : ''}</div>
                 </div>
             </div>
         `).join('');

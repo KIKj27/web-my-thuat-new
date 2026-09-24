@@ -514,6 +514,7 @@
         document.getElementById('adminAnnouncementSection').style.display = isAdmin ? 'block' : 'none';
 
         div.innerHTML = users.map(u => {
+            // NÚT HỒ SƠ DÀNH CHO ADMIN & OWNER KHI BẤM VÀO SẼ MỞ RA PROFILE CỦA NGƯỜI ĐÓ
             let actionButtons = `<button class="btn-sm btn-primary" onclick="openProfileModal('${u.username}')">Hồ Sơ</button>`;
 
             if (u.username !== currentUser.username) {
@@ -746,9 +747,13 @@
         let theyFollowMe = (currentUser.followers || []).includes(viewingUser.username);
         let mutualFollow = isFollowing && theyFollowMe;
         
-        // CHO PHÉP NHẮN TIN NẾU LÀ ADMIN HOẶC DÃ FOLLOW CHÉO
+        // CHO PHÉP NHẮN TIN NẾU:
+        // 1. Hồ sơ đang xem là ADMIN (cho phép mọi người nhắn cho Admin không cần follow)
+        // 2. Hoặc người đang đăng nhập là ADMIN (Admin có thể nhắn cho mọi người)
+        // 3. Hoặc 2 người đã Follow chéo nhau
         let isTargetAdmin = viewingUser.role === 'admin';
-        let canChat = mutualFollow || isTargetAdmin;
+        let isMeAdmin = currentUser.role === 'admin';
+        let canChat = mutualFollow || isTargetAdmin || isMeAdmin;
 
         let btnChat = document.getElementById('pubBtnChat');
         let chatWarn = document.getElementById('pubChatWarning');

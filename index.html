@@ -78,8 +78,6 @@
         </div>
 
         <button id="pubBtnFollow" class="btn-success" onclick="executeFollow()" style="margin-bottom: 10px;">❤️ Theo dõi</button>
-        <button id="pubBtnChat" class="btn-primary" onclick="startPrivateChat()">💬 Bắt đầu nhắn tin</button>
-        <p id="pubChatWarning" style="color: #EF4444; font-size: 12px; margin-top: 5px;">Hai bạn phải <b>Follow chéo nhau</b> mới có thể nhắn tin!</p>
     </div>
 </div>
 
@@ -140,7 +138,6 @@
         <div class="nav-tabs">
             <button id="btn-feed" onclick="switchTab('feed')" class="active">🖼️ Triển Lãm</button>
             <button id="btn-top7" onclick="switchTab('top7')">🏆 Top 7 Tranh</button>
-            <button id="btn-messages" onclick="switchTab('messages')">👥 Bạn Bè & Nhắn Tin</button>
             <button id="btn-chat" onclick="switchTab('chat')">🌐 Chat Chung</button>
             <button id="btn-profile" onclick="switchTab('profile')">👤 Hồ Sơ</button>
             <button id="btn-admin" onclick="switchTab('admin')" class="hidden" style="background:#DC2626; color:white;">⚙️ Quản Trị</button>
@@ -224,27 +221,7 @@
             </div>
         </div>
 
-        <!-- TAB 3: DANH SÁCH & NHẮN TIN -->
-        <div id="tab-messages" class="hidden">
-            <div class="card" style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <div style="flex: 1; min-width: 250px; border-right: 1px solid #E5E7EB; padding-right: 10px;">
-                    <h4>👥 Thành Viên Hệ Thống</h4>
-                    <p style="font-size: 12px; color: gray;">Bấm vào tên để xem hồ sơ và nhắn tin.</p>
-                    <div id="directUserList" style="max-height: 350px; overflow-y: auto;"></div>
-                </div>
-                
-                <div style="flex: 2; min-width: 280px; position: relative;">
-                    <h4 id="chattingWithTitle">Vui lòng chọn người để nhắn tin</h4>
-                    <div id="privateChatBox" class="chat-box" style="height: 300px;"></div>
-                    <div id="privateInputArea" class="hidden" style="display: flex; gap: 5px; margin-top: 5px;">
-                        <input type="text" id="privateMsgInput" placeholder="Nhập tin nhắn..." onkeydown="if(event.key==='Enter') sendPrivateMsg()" style="margin:0; flex:1;">
-                        <button onclick="sendPrivateMsg()" style="margin:0; width:auto;">Gửi</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 4: PHÒNG CHAT CHUNG -->
+        <!-- TAB 3: PHÒNG CHAT CHUNG -->
         <div id="tab-chat" class="hidden">
             <div class="card">
                 <h3>🌐 Phòng Chat Toàn Trường</h3>
@@ -311,7 +288,7 @@
     const db = firebase.database();
 
     let currentUser = JSON.parse(localStorage.getItem('currentUser')) || null;
-    let posts = [], chats = [], privateMessages = [], users = [], reports = [];
+    let posts = [], chats = [], users = [], reports = [];
     let chattingWithUser = null, viewingUser = null;
     let isLeaderboardActive = true, isChatLocked = false;
     let announcementsData = {};
@@ -359,12 +336,6 @@
         renderChats();
     });
 
-    db.ref('privateMessages').on('value', snapshot => {
-        let data = snapshot.val();
-        privateMessages = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
-        renderPrivateMessages();
-    });
-
     db.ref('reports').on('value', snapshot => {
         let data = snapshot.val();
         reports = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
@@ -404,7 +375,6 @@
         db.ref('users').set(users);
         db.ref('posts').set(posts);
         db.ref('chats').set(chats);
-        db.ref('privateMessages').set(privateMessages);
         if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser));
     }
 
@@ -490,7 +460,7 @@
 
     function switchTab(tabId) {
         currentTab = tabId;
-        ['feed', 'top7', 'messages', 'chat', 'profile', 'admin'].forEach(t => {
+        ['feed', 'top7', 'chat', 'profile', 'admin'].forEach(t => {
             const c = document.getElementById('tab-' + t);
             const b = document.getElementById('btn-' + t);
             if (c) c.classList.add('hidden');
@@ -780,39 +750,6 @@
         saveData(); openProfileModal(viewingUser.username);
     }
 
-    function startPrivateChat() {
-        closeProfileModal(); 
-        chattingWithUser = viewingUser.username;
-        document.getElementById('chattingWithTitle').innerText = `💬 Đang nhắn tin với: ${viewingUser.name}`;
-        document.getElementById('privateInputArea').classList.remove('hidden');
-        switchTab('messages');
-        renderPrivateMessages();
-    }
-
-    function sendPrivateMsg() {
-        const input = document.getElementById('privateMsgInput'); const text = input.value.trim();
-        if (!text || !chattingWithUser) return;
-        privateMessages.push({ id: Date.now() + Math.random(), from: currentUser.username, to: chattingWithUser, text, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) });
-        saveData(); input.value = '';
-    }
-
-    function renderPrivateMessages() {
-        const box = document.getElementById('privateChatBox');
-        if (!chattingWithUser || !currentUser || !box) return;
-        let filtered = privateMessages.filter(m => (m.from === currentUser.username && m.to === chattingWithUser) || (m.from === chattingWithUser && m.to === currentUser.username));
-        box.innerHTML = filtered.map(m => {
-            let isMe = m.from === currentUser.username;
-            return `
-            <div style="margin-bottom: 8px; text-align: ${isMe ? 'right' : 'left'};">
-                <span style="font-size: 11px; color: gray;">[${m.time}]</span>
-                <div style="background: ${isMe ? '#4F46E5' : 'rgba(128,128,128,0.2)'}; color: ${isMe ? 'white' : 'var(--text)'}; padding: 8px 12px; border-radius: 12px; display: inline-block; text-align: left; max-width: 75%;">
-                    ${m.text}
-                </div>
-            </div>
-        `}).join('');
-        box.scrollTop = box.scrollHeight;
-    }
-
     // ================= PHÒNG CHAT CHUNG =================
     function updateChatUI() {
         let input = document.getElementById('chatMsg');
@@ -1030,7 +967,11 @@
             <div style="border-bottom: 1px solid rgba(128,128,128,0.2); padding: 10px 0; display: flex; gap: 15px;">
                 <h2 style="color: var(--primary); margin: 0;">#${idx + 1}</h2>
                 <div>
-                    <h4 style="margin: 0;">${p.title} <small>bởi ${p.author}</small></h4>
+                    <h4 style="margin: 0;">${p.title}</h4>
+                    <div style="display:flex; align-items:center; gap:8px; margin-top:4px;">
+                        <small>bởi <b>${p.author}</b></small>
+                        <button class="btn-sm btn-primary" onclick="openProfileModal('${p.authorUser}')" style="padding:4px 9px; margin:0; font-size:12px;">👤 Hồ sơ</button>
+                    </div>
                     <div style="color: #059669; font-weight: bold;">👍 ${(p.likes || []).length} Thích ${p.score !== null && p.score !== undefined ? `| ⭐ ${p.score}/10` : ''}</div>
                 </div>
             </div>
